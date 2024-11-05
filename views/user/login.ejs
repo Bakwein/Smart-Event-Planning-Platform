@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <style>
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+        }
+        .login-box {
+            margin-top: 200px;
+            width: 300px;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-login:hover {
+            background-color: #0055af;
+            color: #fff;
+        }
+        .btn-register {
+            text-align: center;
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+   <%- include('../partials/begining-header') %> 
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-3">
+                <div class="login-box">
+                    <h2><%= kutu_baslik %></h2>
+                    <form action="/user/login" method="POST">
+                        <div class="form-group">
+                            <label for="tcno">Kullanıcı Adı</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Şifre:</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-login">Giriş</button>
+                    </form>
+                    <p class="btn-register"><a href="/user/forgot_password_render">Şifremi Unuttum.</a></p> <!-- bu href düzenlenecek-->
+                    <p class="btn-register"><a href="/user/register_render">Hesabınız yok mu? Kayıt olun</a></p>
+                    <p class="btn-register"><a href="/admin/login_render">Admin misiniz? Giriş yapın</a></p> <!-- bu href düzenlenecek-->
+                </div>
+            </div>
+        </div>
+        <% if (message && message.length > 0) { %>
+            <div class="row justify-content-center" style="margin-left: 90px;">
+                <div class="col-md-8">
+                    <div class="alert <%= alert_type %> row justify-content-center" role="alert">
+                        <%= message %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>
