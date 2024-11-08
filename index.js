@@ -14,13 +14,52 @@ const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
 const loginRoutes = require("./routes/login");
 
+const db = require("./data/db");
+
 app.use("/libs", express.static(path.join(__dirname,"node_modules")));
 app.use("/static", express.static(path.join(__dirname,"public")));
 
+//routes
 app.use("/admin", adminRoutes);
 app.use("/user", userRoutes);
 app.use(loginRoutes);
 
+//photo update
+const multer = require('multer');
+const storage = multer.diskStorage({
+    destination: function(req, file, cb){
+        cb(null, path.join(__dirname, 'public', 'images')); // dosyanın nereye kaydedileceği
+    },
+    filename: function(req, file, cb){
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)); // dosya adı benzersiz
+    }
+});
+
+const upload = multer({storage: storage});
+app.post("/upload_photo", upload.single('photo'), async function(req, res){
+    try{
+        //path id kontrol
+        if(!req.file || !req.body.id){
+            res.redirect("/");
+            return;
+        }
+        const photoPath = req.file.path;
+        const id = req.body.id;
+        console.log(photoPath, id, "***");
+
+        //db update
+        await db.execute("UPDATE kullanıcılar SET photoPath = ? WHERE idkullanıcılar = ?", [photoPath, id]);
+
+        res.redirect("/");
+
+    }
+    catch(err){
+        console.log(err);
+    }
+});
+
+
+//db
 require("./createtables")
 
 

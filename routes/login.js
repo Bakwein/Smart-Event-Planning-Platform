@@ -5,7 +5,7 @@ const db = require('../data/db');
 
 router.get("/", function(req, res){
     //token varsa .... returnli renderlar olacak
-    console.log("yo1");
+    //console.log("yo1");
     res.redirect("/user/login_render");
 })
 

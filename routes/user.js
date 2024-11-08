@@ -466,14 +466,35 @@ router.get("/register", function(req, res)
     });
 });
 
-router.get("/photo_upload_render", function(req, res)
+router.get("/photo_upload_render/:id", async function(req, res)
 {
-    res.render("user/photo_upload", {
-        title: "Photo Upload",
-    });
+    const userId = req.params.id;
+
+    try{
+
+        const [results,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [userId]);
+        let photoPath = "/static/images/default_pp.png";
+        if(photoPath !== null)
+        {
+            photoPath = "/static" + results[0].photoPath.split('public')[1];
+        }
+        
+
+        res.render("user/photo_upload", {
+            title: "Photo Upload",
+            userId: userId,
+            photoPath: photoPath
+        });
+
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+
+
+    
 });
-
-
 
 router.post("/register", async function(req, res)
 {
@@ -481,9 +502,6 @@ router.post("/register", async function(req, res)
 
         //!! buraya konum eklenecek!! + kontrol
         const {nick, isim, soyisim, dogumTarihi, cinsiyet, email, telefon, ilgi_alani, password, repassword } = req.body;
-
-        //console.log(nick, isim, soyisim, dogumTarihi, cinsiyet, email, telefon, ilgi_alani, password, repassword);
-        console.log(ilgi_alani);
 
         //KONTROLLER
         //nick 50'den fazla mı 0 dan az mı
@@ -671,28 +689,37 @@ router.post("/register", async function(req, res)
         //hashleme
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        //db'ye ekleme
+        //kullanici db'ye ekleme
         await db.execute(`INSERT INTO kullanıcılar (KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon, photoPath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [nick, hashedPassword, email, cinsiyet, "konum", isim, soyisim, dogumTarihi, telefon, ""]);
 
-        res.redirect("/user/photo_upload_render")
+
+        //iliski ekleme
+        if(ilgi_alani.length > 0)
+        {
+            for(let i = 0; i < ilgi_alani.length; i++)
+            {
+                //ilgi alani id bulma
+                const [ilgi_id] = await db.execute(`SELECT idilgiAlanlari FROM ilgialanlari WHERE ilgiAlani = ?`, [ilgi_alani[i]]);
+
+                //kullanici id alma
+                const [users] = await db.execute(`SELECT idkullanıcılar FROM kullanıcılar WHERE KullanıcıAdı = ?`, [nick]);
 
 
+                //iliski ekleme
+                await db.execute(`INSERT INTO kullanici_ilgileri (idkullaniciR, idilgiR) VALUES (?, ?)`, [users[0].idkullanıcılar, ilgi_id[0].idilgiAlanlari]);
+                res.redirect("/user/photo_upload_render/${users[0].idkullanıcılar}");
 
+            }
 
+        }
 
-
+        
 
     }
     catch(err)
     {
         console.log("register post error: " + err);
-    }
-    //kontrol islemleri
-
-
-    //her sey ok ise kullanıcı olustur db'de + token olustur
-
-    //foto yukleme ekranına yonlendirme
+    }  
     
 });
 

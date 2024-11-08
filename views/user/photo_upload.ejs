@@ -2,12 +2,66 @@
 <html lang="en">
 <head>
     <%- include('../partials/head') %>
+    <style>
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+        }
+
+        #uploadForm {
+            width: 50%; /* Form genişliğini %80 olarak ayarlar */
+            margin: 0 auto; /* Formu yatayda ortalar */
+        }
+
+        
+    </style>
 </head>
 <body>
     <%- include('../partials/begining-header') %>
-    <h1> foto ekrani ayarlanacak!</h1>
-    <!-- formda olacak -->
-    <button type="submit" class="btn btn-login">Yükle</button>
-    <button type="submit" class="btn btn-login">Şimdi Değil</button>
+    
+
+
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <h1> Profil Fotoğrafı Ekleme Ekranı</h1>
+            <img id="profilePicture" src="<%= photoPath %>" alt="Profile Picture" style="width: 55%; height: 55%;">
+
+    
+            <!-- formda olacak -->
+            <form id="uploadForm" action="/upload_photo" method="POST" enctype="multipart/form-data">
+                
+                <input type="file" name="photo" id="photo" accept="image/*" onchange="previewImage(event)">
+                <!-- Gizli input ile userId'yi gönderin -->
+                <input type="hidden" name="id" value="<%= userId %>">
+                <button type="submit" class="btn btn-login"  style="width: 50%;" >Yükle</button>
+
+            </form>
+
+
+            <button onclick="skipUpload()" class="btn btn-login" style="width: 55%;">Yükleme İşlemini Bitir</button>
+
+            <script>
+                function previewImage(event) {
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        document.getElementById('profilePicture').src = reader.result;
+                        
+                    };
+                    reader.readAsDataURL(event.target.files[0]);
+                }
+
+                function skipUpload() {
+                    window.location.href = '/'; //bu belki güncellenebilir
+                }
+
+
+            </script>
+        </div>
+    </div>
+    
 </body>
 </html>
