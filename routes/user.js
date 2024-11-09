@@ -286,62 +286,73 @@ router.post('/profile_update', async function(req, res)
 
         const [users] = await db.execute('SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?', [KullanıcıAdı]);
         if(users.length > 0){
-            return res.render('user/profile_update', {
-                title: "Profil Güncelleme",
-                idkullanıcılar: idkullanıcılar,
-                KullanıcıAdı: KullanıcıAdı,
-                sifre: sifre,
-                email: email,
-                cinsiyet: cinsiyet,
-                konum: konum,
-                isim: isim,
-                soyisim: soyisim,
-                dogumTarihi: tarih,
-                telefon: telefon,
-                photoPath: photoPath,
-                message: 'Bu kullanıcı adı zaten kullanımda',
-                alert_type: 'alert-danger'
-            });
+            if(users[0].idkullanıcılar != idkullanıcılar)
+            {
+                return res.render('user/profile_update', {
+                    title: "Profil Güncelleme",
+                    idkullanıcılar: idkullanıcılar,
+                    KullanıcıAdı: KullanıcıAdı,
+                    sifre: sifre,
+                    email: email,
+                    cinsiyet: cinsiyet,
+                    konum: konum,
+                    isim: isim,
+                    soyisim: soyisim,
+                    dogumTarihi: tarih,
+                    telefon: telefon,
+                    photoPath: photoPath,
+                    message: 'Bu kullanıcı adı zaten kullanımda',
+                    alert_type: 'alert-danger'
+                });
+            }
+            
         }
-
+        console.log(idkullanıcılar);
         const [users2] = await db.execute('SELECT * FROM kullanıcılar WHERE email = ?', [email]);
         if(users2.length > 0){
-            return res.render('user/profile_update', {
-                title: "Profil Güncelleme",
-                idkullanıcılar: idkullanıcılar,
-                KullanıcıAdı: KullanıcıAdı,
-                sifre: sifre,
-                email: email,
-                cinsiyet: cinsiyet,
-                konum: konum,
-                isim: isim,
-                soyisim: soyisim,
-                dogumTarihi: tarih,
-                telefon: telefon,
-                photoPath: photoPath,
-                message: 'Bu email zaten kullanımda',
-                alert_type: 'alert-danger'
-            });
+            console.log(users2[0].idkullanıcılar, "***");
+            if(users2[0].idkullanıcılar != idkullanıcılar)
+            {
+                return res.render('user/profile_update', {
+                    title: "Profil Güncelleme",
+                    idkullanıcılar: idkullanıcılar,
+                    KullanıcıAdı: KullanıcıAdı,
+                    sifre: sifre,
+                    email: email,
+                    cinsiyet: cinsiyet,
+                    konum: konum,
+                    isim: isim,
+                    soyisim: soyisim,
+                    dogumTarihi: tarih,
+                    telefon: telefon,
+                    photoPath: photoPath,
+                    message: 'Bu email zaten kullanımda',
+                    alert_type: 'alert-danger'
+                });
+            }
         }
 
         const [users3] = await db.execute('SELECT * FROM kullanıcılar WHERE telefon = ?', [telefon]);
         if(users3.length > 0){
-            return res.render('user/profile_update', {
-                title: "Profil Güncelleme",
-                idkullanıcılar: idkullanıcılar,
-                KullanıcıAdı: KullanıcıAdı,
-                sifre: sifre,
-                email: email,
-                cinsiyet: cinsiyet,
-                konum: konum,
-                isim: isim,
-                soyisim: soyisim,
-                dogumTarihi: tarih,
-                telefon: telefon,
-                photoPath: photoPath,
-                message: 'Bu telefon zaten kullanımda',
-                alert_type: 'alert-danger'
-            });
+            if(users3[0].idkullanıcılar != idkullanıcılar)
+            {
+                return res.render('user/profile_update', {
+                    title: "Profil Güncelleme",
+                    idkullanıcılar: idkullanıcılar,
+                    KullanıcıAdı: KullanıcıAdı,
+                    sifre: sifre,
+                    email: email,
+                    cinsiyet: cinsiyet,
+                    konum: konum,
+                    isim: isim,
+                    soyisim: soyisim,
+                    dogumTarihi: tarih,
+                    telefon: telefon,
+                    photoPath: photoPath,
+                    message: 'Bu telefon zaten kullanımda',
+                    alert_type: 'alert-danger'
+                });
+            }
         }
 
         if(!kontroller.sifreGecerliMi(sifre))
@@ -399,7 +410,7 @@ router.get('/profile_update', async function(req,res){
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const tcno = decoded.tcno;
         */
-        const [results,] = await db.execute("SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?", ['yakisikliboy']);
+        const [results,] = await db.execute("SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?", ['xxx']);
         const tarih = new Date(results[0].dogumTarihi).toISOString().split('T')[0];
         console.log(tarih);
         res.render('user/profile_update', {
