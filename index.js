@@ -43,7 +43,8 @@ app.post("/upload_photo", upload.single('photo'), async function(req, res){
             res.redirect("/");
             return;
         }
-        const photoPath = req.file.path;
+        let photoPath = req.file.path;
+        photoPath = "/static" + photoPath.split('public')[1];
         const id = req.body.id;
         console.log(photoPath, id, "***");
 

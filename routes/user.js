@@ -11,7 +11,7 @@ const bcrypt = require('bcryptjs');
 router.get("/profile", async function(req, res)
 {
     try{
-        const [results,] = await db.execute("SELECT * FROM kullanıcılar"); 
+        const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanicilar = ?", [2]); 
 
         if(results.length === 0)
         {
@@ -370,14 +370,14 @@ router.post('/profile_update', async function(req, res)
                 dogumTarihi: tarih,
                 telefon: telefon,
                 photoPath: photoPath,
-                message: 'Şifre en az bir harf ve bir sayı içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
+                message: 'Şifre en az bir harf ve bir sayı, bir özel karakter içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
                 alert_type: 'alert-danger'
             });
         }
 
         const hashedPassword = await bcrypt.hash(sifre, 10);
 
-        await db.execute('UPDATE kullanıcılar SET KullanıcıAdı = ?, sifre = ?, email = ?, cinsiyet = ?, konum = ?, isim = ?, soyisim = ?, dogumTarihi = ?, telefon = ?, photoPath = ? WHERE idkullanıcılar = ?', [KullanıcıAdı, hashedPassword, email, cinsiyet, "konum", isim, soyisim, dogumTarihi, telefon, "", idkullanıcılar]);
+        await db.execute('UPDATE kullanıcılar SET KullanıcıAdı = ?, sifre = ?, email = ?, cinsiyet = ?, konum = ?, isim = ?, soyisim = ?, dogumTarihi = ?, telefon = ?, photoPath = ? WHERE idkullanıcılar = ?', [KullanıcıAdı, hashedPassword, email, cinsiyet, "konum", isim, soyisim, dogumTarihi, telefon, photoPath, idkullanıcılar]);
         
 
         return res.render('user/profile_update', {
@@ -459,6 +459,8 @@ router.get("/login", function(req, res)
     });
 });
 
+router.post
+
 router.get("/register_render", function(req, res)
 {
     //token kontrolü
@@ -480,12 +482,18 @@ router.get("/register", function(req, res)
 router.get("/photo_upload_render/:id", async function(req, res)
 {
     const userId = req.params.id;
-
+    console.log(userId);
     try{
 
         const [results,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [userId]);
+        /*
         let photoPath = "/static/images/default_pp.png";
-        if(photoPath !== null)
+        if(results[0].photoPath !== null && results[0].photoPath !== "")
+        {
+            photoPath = "/static" + results[0].photoPath.split('public')[1];
+        }*/
+        console.log(results[0].photoPath, "*****");
+        if(results[0].photoPath !== "/static/images/default_pp.png")
         {
             photoPath = "/static" + results[0].photoPath.split('public')[1];
         }
@@ -494,7 +502,7 @@ router.get("/photo_upload_render/:id", async function(req, res)
         res.render("user/photo_upload", {
             title: "Photo Upload",
             userId: userId,
-            photoPath: photoPath
+            photoPath: results[0].photoPath
         });
 
     }
@@ -701,7 +709,9 @@ router.post("/register", async function(req, res)
         const hashedPassword = await bcrypt.hash(password, 10);
 
         //kullanici db'ye ekleme
-        await db.execute(`INSERT INTO kullanıcılar (KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon, photoPath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [nick, hashedPassword, email, cinsiyet, "konum", isim, soyisim, dogumTarihi, telefon, ""]);
+        await db.execute(`INSERT INTO kullanıcılar (KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon, photoPath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [nick, hashedPassword, email, cinsiyet, "konum", isim, soyisim, dogumTarihi, telefon, "/static/images/default_pp.png"]);
+
+        const [users_varmi] = await db.execute('SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?', [nick]);
 
 
         //iliski ekleme
@@ -718,7 +728,8 @@ router.post("/register", async function(req, res)
 
                 //iliski ekleme
                 await db.execute(`INSERT INTO kullanici_ilgileri (idkullaniciR, idilgiR) VALUES (?, ?)`, [users[0].idkullanıcılar, ilgi_id[0].idilgiAlanlari]);
-                res.redirect("/user/photo_upload_render/${users[0].idkullanıcılar}");
+                console.log(users[0].idkullanıcılar);
+                res.redirect(`/user/photo_upload_render/${users_varmi[0].idkullanıcılar}`);
 
             }
 
