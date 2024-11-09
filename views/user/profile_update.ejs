@@ -7,10 +7,15 @@
     
 </head>
 <body>
+    <%- include('../partials/user/nav') %>
     <div class="container mt-3">
         <div class="row">
             <div class="col-md-12 mt-3">
                 <h3>Hasta Profili Güncelle</h3>
+            </div>
+            <div class="col-md-12 mt-3">
+                <img id="userPhoto" src="<%= photoPath %>" class="card-img-top mx-auto" alt="user icon" style="width: 50%; height: auto; cursor: pointer;">
+                <input type="file" id="photoUpload" accept="image/*" style="display: none;">
             </div>
             <div class="col-md-12 mt-3">
                 <form method="post">
@@ -97,6 +102,45 @@
             </div>
         <% } %>
     </div>
+
+    <script>
+        const userId = "<%= idkullanıcılar %>"; // Kullanıcının ID'sini burada dinamik olarak ayarla
+        // Fotoğraf alanına tıklandığında dosya seçme penceresini aç
+        document.getElementById("userPhoto").addEventListener("click", function() {
+            document.getElementById("photoUpload").click();
+        });
+    
+        // Dosya seçildikten sonra yapılacak işlemler
+        document.getElementById("photoUpload").addEventListener("change", function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append("photo", file);
+            formData.append("id", userId);
+
+            // Dosyayı AJAX ile gönder
+            fetch("/upload_photo2", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url; // Yönlendirme yap
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.photoPath) {
+                    document.getElementById("userPhoto").src = data.photoPath; // Yeni fotoğrafı güncelle
+                }
+            })
+            .catch(error => {
+                console.error("Fotoğraf yükleme hatası:", error);
+            });
+        }
+    });
+    </script>
     
 </body>
 </html>

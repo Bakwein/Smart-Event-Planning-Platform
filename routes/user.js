@@ -11,7 +11,7 @@ const bcrypt = require('bcryptjs');
 router.get("/profile", async function(req, res)
 {
     try{
-        const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanicilar = ?", [2]); 
+        const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [17]); 
 
         if(results.length === 0)
         {
@@ -410,7 +410,7 @@ router.get('/profile_update', async function(req,res){
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const tcno = decoded.tcno;
         */
-        const [results,] = await db.execute("SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?", ['xxx']);
+        const [results,] = await db.execute("SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?", ['arda']);
         const tarih = new Date(results[0].dogumTarihi).toISOString().split('T')[0];
         console.log(tarih);
         res.render('user/profile_update', {
@@ -459,7 +459,7 @@ router.get("/login", function(req, res)
     });
 });
 
-router.post
+
 
 router.get("/register_render", function(req, res)
 {
