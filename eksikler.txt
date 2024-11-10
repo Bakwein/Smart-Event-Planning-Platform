@@ -1,6 +1,6 @@
 resim yükleme kısmında ariza var
 
-şifre degistirme kismindan devam
+şifre yazma kontroller tamam kimin değiştirdiğinin ayarlanmasi lazim
 
-check_password'a da kontrol lazim
+admin: ilgi ekleme/düzenleme
 

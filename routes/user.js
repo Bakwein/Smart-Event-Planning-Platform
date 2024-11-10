@@ -27,6 +27,125 @@ function cookie_control(req, res)
     }
 }
 
+function you_have_cookie(req, res)
+{
+    if(req.cookies.token)
+    {
+        const token = req.cookies.token;
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
+            if(!err){
+                if(decoded.role === 'user')
+                {
+                    return res.redirect("/user/home_render");
+                }
+                else if(decoded.role === 'admin')
+                {
+                    return res.redirect("/admin/home_render");
+                }
+                else
+                {
+                    return res.redirect("/user/logout");
+                }
+            }
+            else
+            {
+                return res.redirect("/user/logout");
+            }
+        })
+    }
+}
+
+router.get("/ilgi_list", async function(req, res)
+{
+    cookie_control(req, res);
+
+    try{
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [res_first,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [id]);
+        if(res_first.length === 0)
+            {
+                res.redirect("/user/logout");
+            }
+        const name_ = res_first[0].KullanıcıAdı;
+        const kullaniciid = res_first[0].idkullanıcılar;
+        const [ilgiler,] = await db.execute(
+            `SELECT i.ilgiAlani, i.idilgiAlanlari
+             FROM ilgialanlari i
+             LEFT JOIN kullanici_ilgileri ki ON i.idilgiAlanlari = ki.idilgiR AND ki.idkullaniciR = ?
+             WHERE ki.idilgiR IS NOT NULL;`,
+            [kullaniciid]
+        );
+        //const [tumilgiler,] = await db.execute("SELECT * FROM ilgialanlari");
+        const [nonilgiler,] = await db.execute(
+            `SELECT i.ilgiAlani, i.idilgiAlanlari
+             FROM ilgialanlari i
+             LEFT JOIN kullanici_ilgileri ki ON i.idilgiAlanlari = ki.idilgiR AND ki.idkullaniciR = ?
+             WHERE ki.idilgiR IS NULL;`,
+            [kullaniciid]
+        );
+        
+        res.render('user/ilgi_list', {
+            title: "İlgiler",
+            idkullanıcılar: kullaniciid,
+            ilgiler: ilgiler,
+            nonilgiler: nonilgiler,
+            message: '',
+            alert_type: ''
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.get('/ilgi_list/delete/:idilgiAlanlari', async function(req, res) {
+    try{
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+        const idilgiAlanlari = req.params.idilgiAlanlari;
+        const [iliskiler,] = await db.execute("SELECT * FROM kullanici_ilgileri WHERE idilgiR = ? AND idkullaniciR = ?", [idilgiAlanlari, id]);
+        if(iliskiler.length === 0)
+        {
+            return res.redirect('/user/ilgi_list');
+        }
+
+        await db.execute("DELETE FROM kullanici_ilgileri WHERE idilgiR = ? AND idkullaniciR = ?", [idilgiAlanlari, id]);
+
+        res.redirect('/user/ilgi_list');
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.get('/ilgi_list/add/:idilgiAlanlari', async function(req, res) {
+    try{
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+        const idilgiAlanlari = req.params.idilgiAlanlari;
+        const [iliskiler,] = await db.execute("SELECT * FROM kullanici_ilgileri WHERE idilgiR = ? AND idkullaniciR = ?", [idilgiAlanlari, id]);
+        if(iliskiler.length !== 0)
+        {
+            return res.redirect('/user/ilgi_list');
+        }
+
+        await db.execute("INSERT INTO kullanici_ilgileri(idilgiR, idkullaniciR) VALUES(?,?)", [idilgiAlanlari, id]);
+
+        res.redirect('/user/ilgi_list');
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
 router.get("/profile", async function(req, res)
 {
     //control
@@ -40,7 +159,7 @@ router.get("/profile", async function(req, res)
 
         if(results.length === 0)
         {
-            console.log("VEEEEEEY");
+            res.redirect("/user/logout");
         }
         else
         {
@@ -334,7 +453,7 @@ router.post('/profile_update', async function(req, res)
             }
             
         }
-        console.log(idkullanıcılar);
+        //console.log(idkullanıcılar);
         const [users2] = await db.execute('SELECT * FROM kullanıcılar WHERE email = ?', [email]);
         if(users2.length > 0){
             console.log(users2[0].idkullanıcılar, "***");
@@ -436,10 +555,10 @@ router.get('/profile_update', async function(req,res){
     try{
         
         const token = req.cookies.token;
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         const id = decoded.id;
 
-        const [res_first,] = await db.execute("select * from kullanıcılar where idkullanicilar = ?", [id]);
+        const [res_first,] = await db.execute("select * from kullanıcılar where idkullanıcılar = ?", [id]);
         if(res_first.length === 0)
         {
             res.redirect("/user/logout");
@@ -482,12 +601,14 @@ router.get("/index", function(req, res)
 
 router.get("/login_render", function(req, res)
 {
+    you_have_cookie(req, res);
     //token kontrolü
     res.redirect("/user/login");
 });
 
 router.get("/login", function(req, res)
 {
+    you_have_cookie(req, res);
     res.render("user/login", {
         title: "Login",
         kutu_baslik: 'Kullanıcı Girişi',
@@ -497,6 +618,7 @@ router.get("/login", function(req, res)
 });
 
 router.post("/login", async function(req, res){
+    you_have_cookie(req, res);
     try{
         const {name, password} = req.body;
         
@@ -617,7 +739,7 @@ router.get("/home", async function(req, res){
 
 router.get("/register_render", function(req, res)
 {
-    //token kontrolü
+    you_have_cookie(req, res);
 
     res.redirect("/user/register");
 });
@@ -625,6 +747,7 @@ router.get("/register_render", function(req, res)
 
 router.get("/register", function(req, res)
 {
+    you_have_cookie(req, res);
     res.render("user/register", {
         title: "Kullanıcı Kayıt",
         kutu_baslik: 'Kullanıcı Kayıt',
@@ -635,6 +758,7 @@ router.get("/register", function(req, res)
 
 router.get("/photo_upload_render/:id", async function(req, res)
 {
+    you_have_cookie(req, res);
     const userId = req.params.id;
     console.log(userId);
     try{
@@ -671,6 +795,7 @@ router.get("/photo_upload_render/:id", async function(req, res)
 
 router.post("/register", async function(req, res)
 {
+    you_have_cookie(req, res);
     try{
 
         //!! buraya konum eklenecek!! + kontrol
@@ -854,7 +979,7 @@ router.post("/register", async function(req, res)
             return res.render("user/register", {
                 title: "Kullanıcı Kayıt",
                 kutu_baslik: 'Kullanıcı Kayıt',
-                message: 'Şifre en az bir harf ve bir sayı içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
+                message: 'Şifre en az bir harf, bir sayı ve bir karakter içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
                 alert_type: 'alert-danger',
             });
         }
@@ -897,15 +1022,31 @@ router.post("/register", async function(req, res)
 
 router.get("/forgot_password_render", function(req, res)
 {
+    you_have_cookie(req, res);
     res.render("user/forgot_password_render", {
         title: "Şifremi Unuttum!",
+        message: '',
+        alert_type: '',
     });
 });
 
 router.post("/new_password", async function(req, res)
 {
+    you_have_cookie(req, res);
     const {email} = req.body;
     console.log(email);
+
+    //email db'de kayıtlı mı
+    const [users] = await db.execute('SELECT * FROM kullanıcılar WHERE email = ?', [email]);
+    if(users.length === 0)
+    {
+        return res.render("user/forgot_password_render", {
+            title: "Şifremi Unuttum!",
+            message: 'Bu email ile kayıtlı bir kullanıcı bulunamadı',
+            alert_type: 'alert-danger',
+        });
+    }
+
 
     // bu email'e random 6 saneli sayı gönderilecek 
     const random_num = Math.floor(Math.random() * 900000) + 100000;
@@ -935,20 +1076,23 @@ router.post("/new_password", async function(req, res)
         console.log('E-posta gönderildi');
         
         // Başarılıysa kullanıcıyı başka bir sayfaya yönlendir
-        res.render("user/code_check", {
+        return res.render("user/code_check", {
             title: "Şifremi Unuttum!",
+            message: '',
+            alert_type: '',
         });
     } catch (error) {
         console.error('E-posta gönderim hatası:', error);
-        res.status(500).send('E-posta gönderiminde hata oluştu.');
+        return res.render("user/forgot_password_render", {
+            title: "Şifremi Unuttum!",
+            message: 'E-posta gönderim hatası',
+            alert_type: 'alert-danger',
+        });
     }
-
-    res.render("user/code_check", {
-        title: "Şifremi Unuttum!",
-    })
 });
 
 router.post("/check_password", async function(req, res){
+    you_have_cookie(req, res);
     const {code} = req.body;
     console.log("code", code);
 
@@ -959,25 +1103,53 @@ router.post("/check_password", async function(req, res){
         if(code == num_)
         {
             // ok
-            res.render("user/update_password", {
+            res.render("user/check_password", {
                 title: "Şifreyi Güncelle!",
+                message: '',
+                alert_type: '',
             })
         }
         else
         {
-            //hata durumu ?
+            // hata
+            res.render("user/code_check", {
+                title: "Şifremi Unuttum!",
+                message: 'Kod hatalı',
+                alert_type: 'alert-danger',
+            });
         }
     } else {
         console.log('No record found with idkontrol = 1');
         //hata durumu ?
-        //return res.redirect("/user/forgot_password_render"); hata mesajı ile geri dönmeli
+        res.render("user/code_check", {
+            title: "Şifremi Unuttum!",
+            message: 'db hatası!',
+            alert_type: 'alert-danger',
+        });
     }
 
 });
 
 router.post("/update_new_password", async function(req, res){
+    you_have_cookie(req, res);
     const {password, repassword} = req.body;
-    //şifre kontrol ...
+
+    if(password !== repassword)
+    {
+        return res.render("user/check_password", {
+            title: "Şifreyi Güncelle!",
+            message: 'Şifreler uyuşmuyor',
+            alert_type: 'alert-danger',
+        });
+    }
+    else if(!kontroller.sifreGecerliMi(password))
+    {
+        return res.render("user/check_password", {
+            title: "Şifreyi Güncelle!",
+            message: 'Şifre en az bir harf, bir sayı ve bir karakter içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
+            alert_type: 'alert-danger',
+        });
+    }
 });
 
 router.get("/logout", function(req, res)
