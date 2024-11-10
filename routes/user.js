@@ -7,11 +7,36 @@ dotenv.config();
 const db = require("../data/db");
 const kontroller = require('../kontroller');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+
+function cookie_control(req, res)
+{
+    if(req.cookies.token)
+    {
+        const token = req.cookies.token;
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
+            if(err){
+                return res.redirect('/');
+            }
+        })
+    }
+    else
+    {
+        return res.redirect('/');
+    }
+}
 
 router.get("/profile", async function(req, res)
 {
+    //control
+    cookie_control(req, res);
+
     try{
-        const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [17]); 
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+        const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [id]); 
 
         if(results.length === 0)
         {
@@ -45,16 +70,18 @@ router.get("/profile", async function(req, res)
 
 router.get('/profile_update_render', function(req,res) 
 {
+    cookie_control(req, res);
     res.redirect('/user/profile_update');
 });
 
 router.post('/profile_update', async function(req, res)
 {
+    cookie_control(req, res);
     try{
         const {idkullanıcılar,KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon, photoPath} = req.body;
-        console.log(req.body);
+        //console.log(req.body);
         const tarih = new Date(dogumTarihi).toISOString().split('T')[0];
-        console.log(tarih);
+        //console.log(tarih);
         if(KullanıcıAdı.length > 50 || KullanıcıAdı.length <= 0)
         {
             return res.render('user/profile_update', {
@@ -404,13 +431,22 @@ router.post('/profile_update', async function(req, res)
 });
 
 router.get('/profile_update', async function(req,res){
+    cookie_control(req, res);
+
     try{
-        /*
+        
         const token = req.cookies.token;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const tcno = decoded.tcno;
-        */
-        const [results,] = await db.execute("SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?", ['arda']);
+        const id = decoded.id;
+
+        const [res_first,] = await db.execute("select * from kullanıcılar where idkullanicilar = ?", [id]);
+        if(res_first.length === 0)
+        {
+            res.redirect("/user/logout");
+        }
+        const name_ = res_first[0].KullanıcıAdı;
+        
+        const [results,] = await db.execute("SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?", [name_]);
         const tarih = new Date(results[0].dogumTarihi).toISOString().split('T')[0];
         console.log(tarih);
         res.render('user/profile_update', {
@@ -438,6 +474,7 @@ router.get('/profile_update', async function(req,res){
 
 router.get("/index", function(req, res)
 {
+    cookie_control(req, res);
     res.render("user/index", {
         title: "Anasayfa"
     });
@@ -459,7 +496,124 @@ router.get("/login", function(req, res)
     });
 });
 
+router.post("/login", async function(req, res){
+    try{
+        const {name, password} = req.body;
+        
 
+        if(name.length > 50 || name.length <= 0)
+        {
+            return res.render("user/login", {
+                title: "Login",
+                kutu_baslik: 'Kullanıcı Girişi',
+                message: 'Kullanıcı Bulunamadı',
+                alert_type: 'alert-danger',
+            });
+        }
+    
+        const [result,] = await db.execute("select * from kullanıcılar where KullanıcıAdı = ?", [name]);
+
+        if(result.length === 0)
+        {
+            return res.render("user/login", {
+                title: "Login",
+                kutu_baslik: 'Kullanıcı Girişi',
+                message: 'Kullanıcı Bulunamadı',
+                alert_type: 'alert-danger',
+            });
+        }
+        else
+        {
+            const hashedInput = result[0].sifre;
+
+            if(await bcrypt.compare(password, hashedInput))
+            {
+                const kullanici_id = result[0].idkullanıcılar;
+                const token = jwt.sign({id: kullanici_id, role: "user"}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
+
+                //cookie
+                /* 
+                if(process.env.isHttps == 'true'){
+                    res.cookie('token', token, {httpOnly: true, secure: true});
+                }
+                else{
+                    res.cookie('token', token, {httpOnly: true});
+                }
+                */
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: process.env.isHttps === 'true'
+                });
+
+                return res.redirect('/user/home_render')
+                
+            }
+            else
+            {
+                return res.render("user/login", {
+                    title: "Login",
+                    kutu_baslik: 'Kullanıcı Girişi',
+                    message: 'Şifre Yanlış!',
+                    alert_type: 'alert-danger',
+                });
+            }
+        }
+
+
+
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+function verifyToken(req, res)
+{
+    const token = req.cookies.token;
+    if(!token)
+    {
+        return res.render("user/login", {
+            title: "Login",
+            kutu_baslik: 'Kullanıcı Girişi',
+            message: 'Token bulunamadı',
+            alert_type: 'alert-danger',
+        });
+    }
+    try{
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        return decoded;
+    }
+    catch(err)
+    {
+        return res.render("user/login", {
+            title: "Login",
+            kutu_baslik: 'Kullanıcı Girişi',
+            message: 'Token geçersiz',
+            alert_type: 'alert-danger',
+        });
+    }
+}
+
+router.get('/home_render', function(req, res)
+{
+    cookie_control(req, res);
+    const user = verifyToken(req, res);
+    res.redirect('/user/home');
+});
+
+router.get("/home", async function(req, res){
+    cookie_control(req, res);
+    //console.log("gridi");
+    const token = req.cookies.token;
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const id = decoded.id;
+
+    //
+    res.render('user/home', {
+        title: "Anasayfa",
+    })
+});
 
 router.get("/register_render", function(req, res)
 {
@@ -492,7 +646,7 @@ router.get("/photo_upload_render/:id", async function(req, res)
         {
             photoPath = "/static" + results[0].photoPath.split('public')[1];
         }*/
-        console.log(results[0].photoPath, "*****");
+        //console.log(results[0].photoPath, "*****");
         if(results[0].photoPath !== "/static/images/default_pp.png")
         {
             photoPath = "/static" + results[0].photoPath.split('public')[1];
@@ -728,15 +882,11 @@ router.post("/register", async function(req, res)
 
                 //iliski ekleme
                 await db.execute(`INSERT INTO kullanici_ilgileri (idkullaniciR, idilgiR) VALUES (?, ?)`, [users[0].idkullanıcılar, ilgi_id[0].idilgiAlanlari]);
-                console.log(users[0].idkullanıcılar);
+                //console.log(users[0].idkullanıcılar);
                 res.redirect(`/user/photo_upload_render/${users_varmi[0].idkullanıcılar}`);
 
             }
-
         }
-
-        
-
     }
     catch(err)
     {
@@ -830,33 +980,10 @@ router.post("/update_new_password", async function(req, res){
     //şifre kontrol ...
 });
 
-router.get('/profile_update', async function(req,res){
-    try{
-        /*
-        const token = req.cookies.token;
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const tcno = decoded.tcno;
-        */
-        const [results,] = await db.execute("SELECT * FROM hasta WHERE tcno = ?", [tcno]);
-        res.render('user/profile_update', {
-            id: results[0].hastaid,
-            tcno: results[0].tcno,
-            isim: results[0].isim,
-            soyisim: results[0].soyisim,
-            //dogumTarihi: results[0].dogumTarihi,
-            //cinsiyet: cinsiyettemp,
-            telefon: results[0].telefon,
-            sehir: results[0].sehir,
-            ilce: results[0].ilce,
-            mahalle: results[0].mahalle,
-            message: '',
-            alert_type: '',
-        });
-    }
-    catch(err)
-    {
-        console.log(err);
-    }
+router.get("/logout", function(req, res)
+{
+    res.clearCookie('token');
+    res.redirect("/");
 });
 
 module.exports = router;

@@ -1,0 +1,6 @@
+resim yükleme kısmında ariza var
+
+şifre degistirme kismindan devam
+
+check_password'a da kontrol lazim
+
