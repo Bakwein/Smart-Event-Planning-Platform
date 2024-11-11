@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <style>
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/admin/nav') %>
+    
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <h3>Kullanıcılar</h3>
+            </div>
+            <div class="col-md-12 mt-3">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:50px">Kullanıcı Id</th>
+                            <th>Kullanıcı Adı</th>
+                            <th>İsim</th>
+                            <th>Soyisim</th>
+                            <th>E-mail</th>
+                            <th>Telefon</th>
+                            <th>Cinsiyet</th>
+                            <th>Konum</th>
+                            <th>Doğum Tarihi</th>
+                            <th style="width:130px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% kullanicilar.forEach(kul => { %>
+                            <tr>
+                                <td>
+                                    <%= kul.idkullanıcılar %>
+                                </td>
+                                <td>
+                                    <%= kul.KullanıcıAdı %>   
+                                </td>
+                                <td>
+                                    <%= kul.isim %>   
+                                </td>
+                                <td>
+                                    <%= kul.soyisim %>   
+                                </td>
+                                <td>
+                                    <%= kul.email %>   
+                                </td>
+                                <td>
+                                    <%= kul.telefon %>   
+                                </td>
+                                <td>
+                                    <% if (kul.cinsiyet === '0') { %>
+                                        Cinsiyet belirtilmemiş
+                                    <% } else if (kul.cinsiyet === '1') { %>
+                                        Erkek
+                                    <% } else if (kul.cinsiyet === '2') { %>
+                                        Kadın
+                                    <% } %>  
+                                </td>
+                                <td>
+                                    <%= kul.konum %>   
+                                </td>
+                                <td>
+                                    <%= kul.dogumTarihi.getDate() %>-<%= (kul.dogumTarihi.getMonth() + 1) %>-<%= kul.dogumTarihi.getFullYear() %>  
+                                </td>
+                                <td>
+                                    <a class="btn btn-sm btn-primary" href="/admin/users/update/<%=kul.idkullanıcılar%>">Düzenle</a>
+                                    <a class="btn btn-sm btn-danger" href="/admin/users/delete/<%=kul.idkullanıcılar%>">Sil</a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <% if (message && message.length > 0) { %>
+            <div class="row justify-content-center" style="margin-left: 90px;">
+                <div class="col-md-8">
+                    <div class="alert <%= alert_type %> row justify-content-center" role="alert">
+                        <%= message %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

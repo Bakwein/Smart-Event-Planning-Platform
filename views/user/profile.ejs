@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <%- include('../partials/head') %>
-    <title>Hasta Profili</title>
+    <title>Profil</title>
     <style>
         body {
             /* display: flex; */
@@ -19,7 +19,7 @@
     <div class="container mt-3">
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Hasta Profili</h3>
+                <h3>Kullanıcı Profili</h3>
             </div>
             <div class="d-flex justify-content-center" style="margin-top: 40px;">
                 <div class="card" style="width: 20rem;">
@@ -31,7 +31,13 @@
                         <li class="list-group-item"><strong>Id :</strong> <%= idkullanıcılar %></li>
                       <li class="list-group-item"><strong>Kullanıcı Adı :</strong> <%= KullanıcıAdı %></li>
                       <li class="list-group-item"><strong>Doğum Tarihi :</strong> <%= dogumTarihi %></li>
-                      <li class="list-group-item"><strong>Cinsiyet :</strong> <%= cinsiyet %></li>
+                      <li class="list-group-item"><strong>Cinsiyet :</strong> <% if (cinsiyet === '0') { %>
+                        Cinsiyet belirtilmemiş
+                    <% } else if (cinsiyet === '1') { %>
+                        Erkek
+                    <% } else if (cinsiyet === '2') { %>
+                        Kadın
+                    <% } %></li>
                       <li class="list-group-item"><strong>E-posta :</strong> <%= email %></li>
                       <li class="list-group-item"><strong>Telefon Numarası :</strong> <%= telefon %></li>
                       <li class="list-group-item"><strong>Konum :</strong> <%= konum %></li>

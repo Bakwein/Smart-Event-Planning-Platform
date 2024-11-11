@@ -197,8 +197,19 @@ router.post('/profile_update', async function(req, res)
 {
     cookie_control(req, res);
     try{
-        const {idkullanıcılar,KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon, photoPath} = req.body;
-        //console.log(req.body);
+        const {idkullanıcılar,KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon} = req.body;
+
+        //kullanıcı kontrol ev photopath alma
+        const [user_control,] = await db.execute("select * from kullanıcılar where idkullanıcılar = ?", [idkullanıcılar]);
+        if(user_control === 0)
+        {
+            return res.redirect("/user/logout");
+        }
+
+        const photoPath = user_control[0].photoPath;
+
+
+        console.log(req.body);
         const tarih = new Date(dogumTarihi).toISOString().split('T')[0];
         //console.log(tarih);
         if(KullanıcıAdı.length > 50 || KullanıcıAdı.length <= 0)
@@ -522,7 +533,7 @@ router.post('/profile_update', async function(req, res)
         }
 
         const hashedPassword = await bcrypt.hash(sifre, 10);
-
+        console.log(photoPath,"yo!");
         await db.execute('UPDATE kullanıcılar SET KullanıcıAdı = ?, sifre = ?, email = ?, cinsiyet = ?, konum = ?, isim = ?, soyisim = ?, dogumTarihi = ?, telefon = ?, photoPath = ? WHERE idkullanıcılar = ?', [KullanıcıAdı, hashedPassword, email, cinsiyet, "konum", isim, soyisim, dogumTarihi, telefon, photoPath, idkullanıcılar]);
         
 
@@ -540,7 +551,7 @@ router.post('/profile_update', async function(req, res)
             telefon: telefon,
             photoPath: photoPath,
             message: 'Bilgiler Güncellendi',
-            alert_type: 'alert-danger'
+            alert_type: 'alert-success'
         });
     }
     catch(err)
@@ -1180,6 +1191,26 @@ router.post("/update_new_password", async function(req, res){
         alert_type: 'alert-success',
         email: email
     });
+});
+
+
+router.get("/create_etkinlik", async function(req, res){
+    cookie_control(req, res);
+
+    const [kategoriler, ] = await db.execute("select * from ilgialanlari");
+
+    res.render("user/create_etkinlik", {
+        title: "Etkinlik Oluştur",
+        message: '',
+        alert_type: '',
+        kategoriler: kategoriler
+    });
+});
+
+router.post("/create_etkinlik", async function(req, res){
+    cookie_control(req, res);
+
+   
 });
 
 router.get("/logout", function(req, res)

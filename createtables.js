@@ -156,7 +156,51 @@ async function create_kullanici_ilgileri_table()
 }
 
 
+async function create_etkinlik_table()
+{
+    try{
+        await db.execute(`CREATE TABLE IF NOT EXISTS etkinlikler (
+            idetkinlikler int NOT NULL AUTO_INCREMENT,
+            etkinlikAdi varchar(255) NOT NULL,
+            aciklama text NOT NULL,
+            tarih date NOT NULL,
+            saat time NOT NULL,
+            etkinlikSuresi int NOT NULL,
+            konum point NOT NULL,
+            kategori varchar(255) NOT NULL,
+            durum int NOT NULL,
+            photoPath varchar(1000) DEFAULT NULL,
+            PRIMARY KEY (idetkinlikler),
+            UNIQUE KEY idetkinlikler_UNIQUE (idetkinlikler)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci`)
+            console.log("etkinlik table is created!");
+    }
+    catch(err)
+    {
+        console.log("etkinlik table creation error: " + err);
+    }
+}
 
+async function create_katilimcilar_table()
+{
+    try{
+        await db.execute(`CREATE TABLE IF NOT EXISTS katilimcilar (
+            idkatilimcilar int NOT NULL AUTO_INCREMENT,
+            idkullaniciR INT NOT NULL,
+            idetkinlikR INT NOT NULL,
+            PRIMARY KEY (idkatilimcilar),
+            KEY idkullaniciR_idx (idkullaniciR),
+            KEY idilgiR_idx (idetkinlikR),
+            CONSTRAINT fk_kullanici2 FOREIGN KEY (idkullaniciR) REFERENCES kullanıcılar (idkullanıcılar) ON DELETE CASCADE ON UPDATE CASCADE,
+            CONSTRAINT fk_etkinlikler FOREIGN KEY (idetkinlikR) REFERENCES etkinlikler (idetkinlikler) ON DELETE CASCADE ON UPDATE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;`);
+          console.log("katilimcilar table is created!");
+    }
+    catch(err)
+    {
+        console.log("kullanici ilgileri table creation error: " + err);
+    }
+}
 
 
 
@@ -166,6 +210,8 @@ create_kontrol_table();
 create_kullanicilar_table();
 create_ilgi_alanlari_table();
 create_kullanici_ilgileri_table();
+create_etkinlik_table();
+create_katilimcilar_table();
 
 //admin
 create_admin("admin", "admin");

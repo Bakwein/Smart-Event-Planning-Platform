@@ -4,3 +4,4 @@ resim yükleme kısmında ariza var
 
 admin: ilgi ekleme/düzenleme
 
+şifre seçmeye göre güncellenecek
