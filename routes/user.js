@@ -1080,6 +1080,7 @@ router.post("/new_password", async function(req, res)
             title: "Şifremi Unuttum!",
             message: '',
             alert_type: '',
+            email: email
         });
     } catch (error) {
         console.error('E-posta gönderim hatası:', error);
@@ -1093,8 +1094,8 @@ router.post("/new_password", async function(req, res)
 
 router.post("/check_password", async function(req, res){
     you_have_cookie(req, res);
-    const {code} = req.body;
-    console.log("code", code);
+    const {email, code} = req.body;
+    console.log("code", code, email);
 
     const [kontroller] = await db.execute('SELECT * FROM kontrol WHERE idkontrol = ?', [1]);
 
@@ -1107,6 +1108,7 @@ router.post("/check_password", async function(req, res){
                 title: "Şifreyi Güncelle!",
                 message: '',
                 alert_type: '',
+                email: email
             })
         }
         else
@@ -1116,6 +1118,7 @@ router.post("/check_password", async function(req, res){
                 title: "Şifremi Unuttum!",
                 message: 'Kod hatalı',
                 alert_type: 'alert-danger',
+                email: email
             });
         }
     } else {
@@ -1125,6 +1128,7 @@ router.post("/check_password", async function(req, res){
             title: "Şifremi Unuttum!",
             message: 'db hatası!',
             alert_type: 'alert-danger',
+            email: email
         });
     }
 
@@ -1132,7 +1136,8 @@ router.post("/check_password", async function(req, res){
 
 router.post("/update_new_password", async function(req, res){
     you_have_cookie(req, res);
-    const {password, repassword} = req.body;
+    const {email, password, repassword} = req.body;
+    console.log("2:", email);
 
     if(password !== repassword)
     {
@@ -1140,6 +1145,7 @@ router.post("/update_new_password", async function(req, res){
             title: "Şifreyi Güncelle!",
             message: 'Şifreler uyuşmuyor',
             alert_type: 'alert-danger',
+            email: email
         });
     }
     else if(!kontroller.sifreGecerliMi(password))
@@ -1148,8 +1154,32 @@ router.post("/update_new_password", async function(req, res){
             title: "Şifreyi Güncelle!",
             message: 'Şifre en az bir harf, bir sayı ve bir karakter içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
             alert_type: 'alert-danger',
+            email: email
         });
     }
+
+    const [users,] = await db.execute("select * from kullanıcılar where email = ?", [email]);
+    if(users.length === 0)
+    {
+        return res.render("user/check_password", {
+            title: "Şifreyi Güncelle!",
+            message: 'Bu email ile kayıtlı bir kullanıcı bulunamadı',
+            alert_type: 'alert-danger',
+            email: email
+        });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    //update password
+    await db.execute('UPDATE kullanıcılar SET sifre = ? WHERE email = ?', [hashedPassword, email]);
+
+    res.render("user/check_password", {
+        title: "Şifreyi Güncelle!",
+        message: 'Şifre başarıyla güncellendi',
+        alert_type: 'alert-success',
+        email: email
+    });
 });
 
 router.get("/logout", function(req, res)

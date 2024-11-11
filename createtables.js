@@ -1,4 +1,5 @@
 const db = require("./data/db");
+const bcrypt = require('bcryptjs');
 
 async function create_admin_table()
 {
@@ -19,6 +20,24 @@ async function create_admin_table()
     }
 }
 
+async function create_admin(name, password)
+{
+    try {
+
+        const [ret] = await db.execute("select * from admin where kullaniciAdi = ?", [name]);
+        if(ret.length > 0)
+        {
+            return;
+        }
+
+        password_hashed = await bcrypt.hash(password, 10);
+
+        await db.execute(`INSERT INTO admin (kullaniciAdi, sifre) VALUES (?, ?)`, [name, password_hashed]);
+        //console.log("admin creation");
+    } catch (error) {
+        console.log("Error inserting row into admin table: " + error);
+    }
+}
 
 async function create_kontrol_table()
 {
@@ -148,6 +167,9 @@ create_kullanicilar_table();
 create_ilgi_alanlari_table();
 create_kullanici_ilgileri_table();
 
+//admin
+create_admin("admin", "admin");
+create_admin("admin2", "123");
 
 //one control row
 create_one_row_kontrol(1, 123456);
