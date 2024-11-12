@@ -26,18 +26,9 @@ app.use("/admin", adminRoutes);
 app.use("/user", userRoutes);
 app.use(loginRoutes);
 
-//photo update
-const multer = require('multer');
-const storage = multer.diskStorage({
-    destination: function(req, file, cb){
-        cb(null, path.join(__dirname, 'public', 'images')); // dosyanın nereye kaydedileceği
-    },
-    filename: function(req, file, cb){
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)); // dosya adı benzersiz
-    }
-});
+//upload
+const upload = require("./multer");
 
-const upload = multer({storage: storage});
 app.post("/upload_photo", upload.single('photo'), async function(req, res){
     try{
         //path id kontrol
@@ -82,6 +73,31 @@ app.post("/upload_photo2", upload.single('photo'), async function(req, res){
         console.log(err);
     }
 });
+
+//just upload the storage and return path
+/*
+app.post("/upload_photo3", upload.single('photo'), async function(req, res){
+    try{
+        console.log(req.body);
+
+        let photoPath = req.file.path;
+        photoPath = "/static" + photoPath.split('public')[1];
+        console.log(photoPath);
+        //res.send(photoPath);
+
+        const [kategoriler, ] = await db.execute("select * from ilgialanlari");
+
+        return res.render("/user/create_etkinlik", {
+            title: "Etkinlik Oluştur",
+            message: '',
+            alert_type: '',
+            kategoriler: kategoriler
+        });
+    }
+    catch(err){
+        console.log(err);
+    }
+});*/
 
 //db
 require("./createtables")

@@ -15,11 +15,11 @@
                 <h3>Etkinlik Oluştur</h3>
             </div>
             <div class="col-md-12 mt-3">
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     <div class="row mb-3">
                         <label for="etkinlikFoto" class="col-sm-2 col-from-label"></label>
                         <div class="col-sm-8">
-                            <img id="eventPhotoPreview" src="/static/images/event.png" class="card-img-top mx-auto mb-3" alt="Event Photo" style="width: 100%; height: auto;">
+                            <img id="eventPhotoPreview" src="/static/images/event.png" class="card-img-top mx-auto mb-3" alt="Event Photo" style="width: 50%; height: auto;">
                             <input type="file" class="form-control" id="etkinlikFoto" name="etkinlikFoto" accept="image/*" onchange="previewEventPhoto(event)">
                         </div>
                     </div>
@@ -94,7 +94,7 @@
     </div>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-
+        
     function previewEventPhoto(event) {
         const reader = new FileReader();
         reader.onload = function() {
@@ -102,8 +102,38 @@
             output.src = reader.result;
         };
         reader.readAsDataURL(event.target.files[0]);
+
     }
-       
+
+    //foto değiştiğinde
+    /*
+    document.getElementById('etkinlikFoto').addEventListener('change', function(e){
+        const file = e.target.files[0];
+        if(file)
+        {
+            const formData = new FormData();
+            formData.append('photo', file);
+            fetch('/upload_photo3', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if(response.redirected){
+                    window.location.href = response.url;
+                }else{
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if(data && data.photoPath){
+                    document.getElementById('eventPhotoPreview').src = data.photoPath;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+            });
+        }
+    });
+       */
     const map = L.map('map').setView([39.9334, 32.8597], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
@@ -128,6 +158,7 @@
         document.getElementById('boylam').value = lng;
 
     });
+
     
     </script>
     

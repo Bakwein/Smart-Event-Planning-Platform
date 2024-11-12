@@ -54,6 +54,180 @@ function you_have_cookie(req, res)
     }
 }
 
+router.get("/interests", async function(req, res)
+{
+    cookie_control(req, res);
+
+    try{
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [ilgiler,] = await db.execute('SELECT * FROM ilgialanlari');
+        const [kullanicilar,] = await db.execute('SELECT * FROM kullanıcılar');
+        const [iliskiler,] = await db.execute('SELECT ki.idkullanici_ilgileri, k.KullanıcıAdı, ia.ilgiAlani FROM kullanici_ilgileri AS ki JOIN kullanıcılar AS k ON ki.idkullaniciR = k.idkullanıcılar JOIN ilgialanlari AS ia ON ki.idilgiR = ia.idilgiAlanlari');
+
+        res.render('admin/interests', {
+            title: 'İlgiler',
+            kullanicilar: kullanicilar,
+            ilgiler: ilgiler,
+            iliskiler: iliskiler,
+            message: '',
+            alert_type: ''
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.get('/interests/interest/delete/:id', async function(req, res){
+    try{
+        const idilgi = req.params.id;
+        const [iliskiler,] = await db.execute("SELECT * FROM ilgialanlari WHERE idilgiAlanlari = ?", [idilgi]);
+        if(iliskiler.length === 0)
+        {
+            return res.redirect('/admin/interests');
+        }
+
+        await db.execute("DELETE FROM ilgialanlari WHERE idilgiAlanlari = ?", [idilgi]);
+
+        res.redirect('/admin/interests');
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.post('/interests/interest/add', async function(req, res){
+    try{
+        const ilgiYeni = req.body.ilgiAlaniYeni;
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [ilgiler,] = await db.execute('SELECT * FROM ilgialanlari');
+        const [kullanicilar,] = await db.execute('SELECT * FROM kullanıcılar');
+        const [ilgiAd,] = await db.execute('SELECT * FROM ilgialanlari WHERE ilgiAlani = ?', [ilgiYeni]);
+        const [iliskiler,] = await db.execute('SELECT ki.idkullanici_ilgileri, k.KullanıcıAdı, ia.ilgiAlani FROM kullanici_ilgileri AS ki JOIN kullanıcılar AS k ON ki.idkullaniciR = k.idkullanıcılar JOIN ilgialanlari AS ia ON ki.idilgiR = ia.idilgiAlanlari');
+
+        if(ilgiYeni.length <= 0 || ilgiYeni.length > 255)
+        {
+            return res.render('admin/interests', {
+                title: 'İlgiler',
+                kullanicilar: kullanicilar,
+                ilgiler: ilgiler,
+                iliskiler: iliskiler,
+                message: 'İlgi Alanı 255 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger'
+            });
+        }
+        else if(ilgiAd.length > 0)
+        {
+            if(ilgiAd[0].ilgiAlani == ilgiYeni)
+            {
+                return res.render('admin/interests', {
+                    title: 'İlgiler',
+                    kullanicilar: kullanicilar,
+                    ilgiler: ilgiler,
+                    iliskiler: iliskiler,
+                    message: 'Bu ilgi alanı zaten var',
+                    alert_type: 'alert-danger'
+                });
+            }
+        }
+
+        await db.execute('INSERT INTO ilgialanlari(ilgiAlani) VALUES (?)', [ilgiYeni]);
+        const [ilgiler2,] = await db.execute('SELECT * FROM ilgialanlari');
+        const [kullanicilar2,] = await db.execute('SELECT * FROM kullanıcılar');
+
+        const [iliskiler2,] = await db.execute('SELECT ki.idkullanici_ilgileri, k.KullanıcıAdı, ia.ilgiAlani FROM kullanici_ilgileri AS ki JOIN kullanıcılar AS k ON ki.idkullaniciR = k.idkullanıcılar JOIN ilgialanlari AS ia ON ki.idilgiR = ia.idilgiAlanlari');
+        return res.render('admin/interests', {
+            title: 'İlgiler',
+            kullanicilar: kullanicilar2,
+            ilgiler: ilgiler2,
+            iliskiler: iliskiler2,
+            message: 'Bilgiler Güncellendi',
+            alert_type: 'alert-danger'
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.post('/interests/connection/add', async function(req, res){
+    try{
+        const kullaniciID = req.body.selectedKullanici;
+        const ilgiID = req.body.selectedIlgi;
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [kullanicilar,] = await db.execute('SELECT * FROM kullanıcılar');
+        const [ilgiler,] = await db.execute('SELECT * FROM ilgialanlari');
+        const [iliski,] = await db.execute("SELECT * FROM kullanici_ilgileri WHERE idkullaniciR = ? AND idilgiR = ?", [kullaniciID, ilgiID]);
+        const [iliskiler,] = await db.execute('SELECT ki.idkullanici_ilgileri, k.KullanıcıAdı, ia.ilgiAlani FROM kullanici_ilgileri AS ki JOIN kullanıcılar AS k ON ki.idkullaniciR = k.idkullanıcılar JOIN ilgialanlari AS ia ON ki.idilgiR = ia.idilgiAlanlari');
+
+        if(iliski.length > 0)
+        {
+            if(iliski[0].idkullaniciR == kullaniciID && iliski[0].idilgiR == ilgiID)
+            {
+                return res.render('admin/interests', {
+                    title: 'İlgiler',
+                    kullanicilar: kullanicilar,
+                    ilgiler: ilgiler,
+                    iliskiler: iliskiler,
+                    message: 'Bu ilişki zaten var',
+                    alert_type: 'alert-danger'
+                });
+            }
+        }
+
+        await db.execute('INSERT INTO kullanici_ilgileri(idkullaniciR, idilgiR) VALUES (?,?)', [kullaniciID, ilgiID]);
+        const [ilgiler2,] = await db.execute('SELECT * FROM ilgialanlari');
+        const [kullanicilar2,] = await db.execute('SELECT * FROM kullanıcılar');
+
+        const [iliskiler2,] = await db.execute('SELECT ki.idkullanici_ilgileri, k.KullanıcıAdı, ia.ilgiAlani FROM kullanici_ilgileri AS ki JOIN kullanıcılar AS k ON ki.idkullaniciR = k.idkullanıcılar JOIN ilgialanlari AS ia ON ki.idilgiR = ia.idilgiAlanlari');
+        return res.render('admin/interests', {
+            title: 'İlgiler',
+            kullanicilar: kullanicilar2,
+            ilgiler: ilgiler2,
+            iliskiler: iliskiler2,
+            message: 'Bilgiler Güncellendi',
+            alert_type: 'alert-danger'
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.get('/interests/connection/delete/:id', async function(req, res){
+    try{
+        const idiliski = req.params.id;
+        const [iliskiler,] = await db.execute("SELECT * FROM kullanici_ilgileri WHERE idkullanici_ilgileri = ?", [idiliski]);
+        if(iliskiler.length === 0)
+        {
+            return res.redirect('/admin/interests');
+        }
+
+        await db.execute("DELETE FROM kullanici_ilgileri WHERE idkullanici_ilgileri = ?", [idiliski]);
+
+        res.redirect('/admin/interests');
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
 
 router.get("/users", async function(req, res)
 {

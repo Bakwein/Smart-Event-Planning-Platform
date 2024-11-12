@@ -8,7 +8,7 @@ const db = require("../data/db");
 const kontroller = require('../kontroller');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
+const fs = require('fs'); 
 
 function cookie_control(req, res)
 {
@@ -1207,10 +1207,122 @@ router.get("/create_etkinlik", async function(req, res){
     });
 });
 
-router.post("/create_etkinlik", async function(req, res){
-    cookie_control(req, res);
 
+const upload = require("../multer");
+
+router.post("/create_etkinlik", upload.single('etkinlikFoto'), async function(req, res){
+    cookie_control(req, res);
+    try{
+        //console.log(req.body);
+        const [kategoriler, ] = await db.execute("select * from ilgialanlari");
+        const {etkinlikFoto, etkinlikAdi, tarih, saat, etkinlikSuresi, kategori, aciklama, enlem, boylam} = req.body;
+
+        const etkinlikFotoPath = req.file ? "/static" + req.file.path.split('public')[1] : "/static/images/event.png";
+
+        //kontroller
+        if(etkinlikAdi.length > 255 || etkinlikAdi.length <= 0)
+        {
+            return res.render("user/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Etkinlik adı 255 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(aciklama.length > 10000 || aciklama.length <= 0)
+        {
+            return res.render("user/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Açıklama 10000 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(!kontroller.isValidDate(tarih))
+        {
+            return res.render("user/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Tarih hatalı',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(!kontroller.isValidTime(saat))
+        {
+            return res.render("user/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Saat hatalı',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(etkinlikSuresi <= 0)
+        {
+            return res.render("user/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Etkinlik süresi 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(kategori === "0")
+        {
+            return res.render("user/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Kategori seçilmelidir',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+
+
+
+        console.log(etkinlikFotoPath);
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        await db.execute("INSERT INTO etkinlikler (etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, konum, kategori, durum, photoPath, olusturanidkullaniciR) VALUES (?, ?, ?, ?, ?, POINT(?, ?), ?, ?, ?, ?)", [etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, enlem, boylam, kategori, 0, etkinlikFotoPath, id]);
+
+        
+
+        res.render("user/create_etkinlik", {
+            title: "Etkinlik Oluştur",
+            message: 'Etkinlik başarıyla oluşturuldu',
+            alert_type: 'alert-success',
+            kategoriler: kategoriler
+        });
+
+
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
    
+});
+
+router.get("/etkinlikler", async function(req, res){
+    cookie_control(req, res);
+    try{
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [olusturduklarim_onayli,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [id, 1]);
+        const [olusturduklarim_onaysiz,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [id, 0]);
+
+        res.render("user/etkinlikler", {
+            title: "Etkinliklerim",
+            olusturduklarim_onayli: olusturduklarim_onayli,
+            olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
 });
 
 router.get("/logout", function(req, res)

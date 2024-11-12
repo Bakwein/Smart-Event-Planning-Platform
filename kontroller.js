@@ -6,10 +6,26 @@ function harfDisindaKarakterVarMi(str) {
     return /[^a-zA-ZçÇğĞıİöÖşŞüÜ]/.test(str);
 }
 
-function isValidDate(str)
-{
+function isValidDate(str) {
+    // Tarih formatı: YYYY-MM-DD
+    const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+    // Regex doğrulama
+    if (!dateRegex.test(str)) {
+        return false;
+    }
+
+    // Geçerli bir tarih olup olmadığını kontrol etmek için `Date` nesnesi oluşturuyoruz
     const date = new Date(str);
-    return !isNaN(date.getTime());
+    return date.getFullYear() === parseInt(str.substring(0, 4), 10) &&
+           date.getMonth() + 1 === parseInt(str.substring(5, 7), 10) &&
+           date.getDate() === parseInt(str.substring(8, 10), 10);
+}
+
+function isValidTime(str)
+{
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/;
+    return timeRegex.test(str);
 }
 
 function emailGecerliMi(email) {
@@ -23,6 +39,4 @@ function sifreGecerliMi(sifre) {
     return sifreRegex.test(sifre);
 }
 
-
-
-module.exports = { sayiDisindaKarakterVarMi, harfDisindaKarakterVarMi, isValidDate, emailGecerliMi, sifreGecerliMi };
+module.exports = { sayiDisindaKarakterVarMi, harfDisindaKarakterVarMi, isValidDate, isValidTime, emailGecerliMi, sifreGecerliMi };

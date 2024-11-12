@@ -170,6 +170,7 @@ async function create_etkinlik_table()
             kategori varchar(255) NOT NULL,
             durum int NOT NULL,
             photoPath varchar(1000) DEFAULT NULL,
+            olusturanidkullaniciR INT NOT NULL,
             PRIMARY KEY (idetkinlikler),
             UNIQUE KEY idetkinlikler_UNIQUE (idetkinlikler)
           ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci`)
