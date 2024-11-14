@@ -147,6 +147,8 @@
         }
     });
        */
+       const etkinlikEnlem = parseFloat("<%= etkinlik.konum?.x || 39.9334 %>");
+        const etkinlikBoylam = parseFloat("<%= etkinlik.konum?.y || 32.8597 %>");
     const map = L.map('map').setView([39.9334, 32.8597], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
@@ -154,7 +156,9 @@
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    let marker;
+    let marker = L.marker([etkinlikEnlem, etkinlikBoylam]).addTo(map);
+
+    
 
     map.on('click', function(e){
         const {lat, lng} = e.latlng;

@@ -95,12 +95,14 @@ router.get("/etkinlik/update/:id", async function(req, res){
     if(etkinlik.length != 1)
     {
         res.render("admin/etkinlik", {
-            title: 'İlgiler',
+            title: 'Etkinlikler',
             onayGereken: onayGereken,
             etkinlikler: etkinlikler,
             kategori: kategori,
             message: '',
-            alert_type: ''
+            alert_type: '',
+            message2: '',
+            alert_type2: ''
         });
     }
 
@@ -115,7 +117,7 @@ router.get("/etkinlik/update/:id", async function(req, res){
         tarih: tarih,
         saat: etkinlik[0].saat,
         sure: etkinlik[0].etkinlikSuresi,
-        kategori: etkinlik[0].kategori,
+        kategorisefa: etkinlik[0].kategori,
         aciklama: etkinlik[0].aciklama,
         konum: etkinlik[0].konum,
         kategoriler: kategoriler
@@ -140,67 +142,80 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
         if(etkinlikAdi.length > 255 || etkinlikAdi.length <= 0)
         {
             return res.render("admin/etkinlik", {
-                title: 'İlgiler',
+                title: 'Etkinlikler',
                 onayGereken: onayGereken,
                 etkinlikler: etkinlikler,
                 kategori: kategori,
                 message: 'Etkinlik adı 255 karakterden fazla, 0 ve 0\'dan az olamaz',
-                alert_type: 'alert-danger'
+                alert_type: 'alert-danger',
+                message2: '',
+                alert_type2: ''
+
             });
         }
         else if(aciklama.length > 10000 || aciklama.length <= 0)
         {
             return res.render("admin/etkinlik", {
-                title: 'İlgiler',
+                title: 'Etkinlikler',
                 onayGereken: onayGereken,
                 etkinlikler: etkinlikler,
                 kategori: kategori,
                 message: 'Açıklama 10000 karakterden fazla, 0 ve 0\'dan az olamaz',
                 alert_type: 'alert-danger',
+                message2: '',
+                alert_type2: ''
             });
         }
         else if(!kontroller.isValidDate(tarih))
         {
             return res.render("admin/etkinlik", {
-                title: 'İlgiler',
+                title: 'Etkinlikler',
                 onayGereken: onayGereken,
                 etkinlikler: etkinlikler,
                 kategori: kategori,
                 message: 'Tarih hatalı',
                 alert_type: 'alert-danger',
+                message2: '',
+                alert_type2: ''
             });
         }
         else if(!kontroller.isValidTime(saat))
         {
             return res.render("admin/etkinlik", {
-                title: 'İlgiler',
+                title: 'Etkinlikler',
                 onayGereken: onayGereken,
                 etkinlikler: etkinlikler,
                 kategori: kategori,
                 message: 'Saat hatalı',
                 alert_type: 'alert-danger',
+                message2: '',
+                alert_type2: ''
             });
         }
         else if(etkinlikSuresi <= 0)
         {
             return res.render("admin/etkinlik", {
-                title: 'İlgiler',
+                title: 'Etkinlikler',
                 onayGereken: onayGereken,
                 etkinlikler: etkinlikler,
                 kategori: kategori,
                 message: 'Etkinlik süresi 0 ve 0\'dan az olamaz',
                 alert_type: 'alert-danger',
+                message2: '',
+                alert_type2: ''
             });
         }
         else if(kategori === "0")
         {
             return res.render("admin/etkinlik", {
-                title: 'İlgiler',
+                title: 'Etkinlikler',
                 onayGereken: onayGereken,
                 etkinlikler: etkinlikler,
                 kategori: kategori,
                 message: 'Kategori seçilmelidir',
                 alert_type: 'alert-danger',
+                message2: '',
+                alert_type2: ''
             });
         }
 
@@ -219,12 +234,14 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
         const [etkinlikler2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1');
 
         res.render("admin/etkinlik", {
-            title: 'İlgiler',
+            title: 'Etkinlikler',
             onayGereken: onayGereken2,
             etkinlikler: etkinlikler2,
             kategori: kategoriler2,
             message: 'Etkinlik başarıyla düzenlendi',
             alert_type: 'alert-success',
+            message2: '',
+            alert_type2: ''
         });
 
 
@@ -252,12 +269,14 @@ router.get('/etkinlik/approve/:id', async function(req, res){
         if(kontrol.length > 0)
         {
             res.render('admin/etkinlik', {
-                title: 'İlgiler',
+                title: 'Etkinlikler',
                 onayGereken: onayGereken,
                 etkinlikler: etkinlikler,
                 kategori: kategori,
                 message: 'Bu etkinlik zaten onaylı',
-                alert_type: ''
+                alert_type: '',
+                message2: '',
+                alert_type2: ''
             });
         }
 
@@ -270,12 +289,14 @@ router.get('/etkinlik/approve/:id', async function(req, res){
         const [kategori2,] = await db.execute('SELECT * FROM ilgialanlari');
 
         res.render('admin/etkinlik', {
-            title: 'İlgiler',
+            title: 'Etkinlikler',
             onayGereken: onayGereken2,
             etkinlikler: etkinlikler2,
             kategori: kategori2,
             message: '',
-            alert_type: ''
+            alert_type: '',
+            message2: '',
+            alert_type2: ''
         });
     }
     catch(err)
@@ -301,6 +322,47 @@ router.get('/etkinlik/delete/:id', async function(req, res){
         await db.execute("DELETE FROM etkinlikler WHERE idetkinlikler = ?", [etkinlikID]);
 
         res.redirect("/admin/etkinlik")
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.get('/etkinlik/:id', async function(req, res){
+    try{
+        const etkinlikID = req.params.id;
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [kategoriler,] = await db.execute("SELECT * FROM ilgialanlari");
+        const [kontrol,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler = ?", [etkinlikID]);
+        const [kurucu,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kontrol[0].olusturanidkullaniciR]);
+        if(kontrol.length === 0)
+        {
+            return res.redirect('/admin/etkinlik');
+        }
+        if(kurucu.length === 0)
+        {
+            return res.redirect('/admin/etkinlik');
+        }
+
+
+        const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
+        
+        res.render('admin/etkinlik_detay', {
+            title: 'Etkinlik Sayfasi',
+            etkinlik: kontrol[0],
+            kategoriler: kategoriler,
+            kurucu: kurucu[0],
+            tarih: tarih,
+            message: '',
+            alert_type: '',
+            message2: '',
+            alert_type2: ''
+        })
     }
     catch(err)
     {

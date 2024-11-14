@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
     <%- include('../partials/head') %>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <title><%= title %></title>
     <style>
+        #map { height: 400px; margin-bottom: 20px; }
         body {
             /* display: flex; */
             justify-content: center;
@@ -14,7 +16,7 @@
             padding: 0; /* body'nin padding'ini sıfır olarak ayarladık */
         }
         .login-box {
-            width: 400px; /* Form genişliğini artırdık */
+            width: 500px; /* Form genişliğini artırdık */
             padding: 20px;
             border: 2px solid #ccc;
             border-radius: 10px;
@@ -84,13 +86,27 @@
             border-bottom-right-radius: 5px;
         }
 
+        .checkbox-group {
+        display: flex;
+        gap: 15px; /* Aralarındaki boşluk */
+        }
+
+        .checkbox-group div {
+            display: flex;
+            align-items: center; /* Checkbox ve label aynı hizada olsun */
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 5px; /* Checkbox ile label arasında boşluk */
+        }
+
     </style>
 </head>
 <body>
     <%- include('../partials/begining-header') %>
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="login-box">
                     <h2><%= kutu_baslik %></h2>
                     <form action="/user/register" method="POST">
@@ -130,24 +146,28 @@
                                 <input type="tel" id="telefon" name="telefon" required>
                             </div>
                         </div>
+                        <div class="row mb-3">
+                            <row>
+                            <label class="col-sm-2 col-from-label"><strong>Konum:</strong></label>
+                            </row>
+                            <row>
+                                <div class="col-sm-12">
+                                    <div id="map"></div>
+                                    <input type="hidden" id="enlem" name="enlem">
+                                    <input type="hidden" id="boylam" name="boylam">
+                                </div>
+                            </row>
+                        </div>
                         <div class="form-group">
                             <label>İlgi Alanları:</label>
-                            <div>
-                                <input type="checkbox" id="spor" name="ilgi_alani[]" value="Spor">
-                                <label for="spor">Spor</label>
-                            </div>
-                            <div>
-                                <input type="checkbox" id="muzik" name="ilgi_alani[]" value="Müzik">
-                                <label for="muzik">Müzik</label>
-                            </div>
-                            <div>
-                                <input type="checkbox" id="sinema" name="ilgi_alani[]" value="Sinema">
-                                <label for="sinema">Sinema</label>
-                            </div>
-                            <div>
-                                <input type="checkbox" id="kitap" name="ilgi_alani[]" value="Kitap">
-                                <label for="kitap">Kitap</label>
-                            </div>
+                            <div class="checkbox-group">
+                                <div>
+                                    <% kategoriler.forEach(kategori => { %>
+                                        <input type="checkbox" id="<%= kategori.ilgiAlani %>" name="ilgi_alani[]" value="<%= kategori.ilgiAlani %>">
+                                        <label for="<%= kategori.ilgiAlani %>"><%= kategori.ilgiAlani %></label>
+                                    <% }) %>                                  
+                                </div>                                
+                            </div>                                                     
                         </div>
                           
                         <div class="form-group">
@@ -175,5 +195,46 @@
             </div>
         <% } %> 
     </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        
+        function previewEventPhoto(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const output = document.getElementById('eventPhotoPreview');
+                output.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+    
+        }
+    
+        const map = L.map('map').setView([39.9334, 35], 5);
+    
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    
+        let marker;
+    
+        map.on('click', function(e){
+            const {lat, lng} = e.latlng;
+    
+            //marker update
+            if(marker){
+                marker.setLatLng(e.latlng);
+            }else{
+                marker = L.marker(e.latlng).addTo(map);
+            }
+    
+            //inputlara bilgileri ekle
+            document.getElementById('enlem').value = lat;
+            document.getElementById('boylam').value = lng;
+    
+        });
+    
+        
+        </script>
 </body>
 </html>

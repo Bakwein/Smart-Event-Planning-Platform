@@ -82,7 +82,7 @@ async function create_kullanicilar_table()
             sifre varchar(255) NOT NULL,
             email varchar(255) NOT NULL,
             cinsiyet varchar(20) NOT NULL,
-            konum varchar(255) NOT NULL,
+            konum point NOT NULL,
             isim varchar(255) NOT NULL,
             soyisim varchar(255) NOT NULL,
             dogumTarihi date NOT NULL,

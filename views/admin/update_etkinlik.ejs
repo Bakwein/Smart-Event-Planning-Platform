@@ -51,13 +51,15 @@
                         <label for="kategori" class="col-sm-2 col-from-label">Kategori:</label>
                         <div class="col-sm-8">
                             <select id="kategori" name="kategori" required>
-                                <option value="-1" selected><% kategoriler.forEach(kat => { %>
-                                    <% if (kat.idilgiAlanlari == kategori) { %>
-                                        <%= kat.ilgiAlani %>
-                                    <% } %>
-                                <% }) %> </p></option>
+                                <option value="-1" selected>Kategori Seçiniz</option>
                                 <% kategoriler.forEach(kategori => { %>
-                                    <option value="<%= kategori.idilgiAlanlari  %>"><%= kategori.ilgiAlani %></option>
+                                    <% if (kategori.idilgiAlanlari == kategorisefa) { %>
+                                        <option value="<%= kategori.idilgiAlanlari %>" selected><%= kategori.ilgiAlani %></option>
+                                    <% } else { %>
+                                        <option value="<%= kategori.idilgiAlanlari %>"><%= kategori.ilgiAlani %></option>
+                                    <% } %>
+
+
                                 <% }) %>
                             </select>
                         </div>
@@ -72,8 +74,8 @@
                         <label class="col-sm-2 col-from-label">Konum:</label>
                         <div class="col-sm-8">
                             <div id="map"></div>
-                            <input type="hidden" id="enlem" name="enlem">
-                            <input type="hidden" id="boylam" name="boylam">
+                            <input type="hidden" id="enlem" name="enlem" value="<%= konum.x %>">
+                            <input type="hidden" id="boylam" name="boylam" value="<%= konum.y %>">
                         </div>
                     </div>
                     
@@ -138,6 +140,8 @@
         }
     });
        */
+    const etkinlikEnlem = parseFloat("<%= konum?.x || 39.9334 %>");
+    const etkinlikBoylam = parseFloat("<%= konum?.y || 32.8597 %>");
     const map = L.map('map').setView([39.9334, 32.8597], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
@@ -145,7 +149,7 @@
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    let marker;
+    let marker = L.marker([etkinlikEnlem, etkinlikBoylam]).addTo(map);
 
     map.on('click', function(e){
         const {lat, lng} = e.latlng;

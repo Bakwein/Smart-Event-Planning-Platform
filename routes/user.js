@@ -197,7 +197,7 @@ router.post('/profile_update', async function(req, res)
 {
     cookie_control(req, res);
     try{
-        const {idkullanıcılar,KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon} = req.body;
+        const {idkullanıcılar,KullanıcıAdı, sifre, email, cinsiyet, enlem, boylam, isim, soyisim, dogumTarihi, telefon} = req.body;
 
         //kullanıcı kontrol ev photopath alma
         const [user_control,] = await db.execute("select * from kullanıcılar where idkullanıcılar = ?", [idkullanıcılar]);
@@ -207,6 +207,7 @@ router.post('/profile_update', async function(req, res)
         }
 
         const photoPath = user_control[0].photoPath;
+        const konum = user_control[0].konum;
 
 
         console.log(req.body);
@@ -421,6 +422,16 @@ router.post('/profile_update', async function(req, res)
                 alert_type: 'alert-danger'
             });
         }
+        else if(!enlem || enlem ===  "" || enlem === undefined || boylam === "" || boylam === undefined) 
+        {
+            return res.render("user/register", {
+                title: "Kullanıcı Kayıt",
+                kutu_baslik: 'Kullanıcı Kayıt',
+                message: 'Konum bilgisi eksik',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
         else if(kontroller.sayiDisindaKarakterVarMi(telefon))
         {
             return res.render('user/profile_update', {
@@ -534,7 +545,7 @@ router.post('/profile_update', async function(req, res)
 
         const hashedPassword = await bcrypt.hash(sifre, 10);
         console.log(photoPath,"yo!");
-        await db.execute('UPDATE kullanıcılar SET KullanıcıAdı = ?, sifre = ?, email = ?, cinsiyet = ?, konum = ?, isim = ?, soyisim = ?, dogumTarihi = ?, telefon = ?, photoPath = ? WHERE idkullanıcılar = ?', [KullanıcıAdı, hashedPassword, email, cinsiyet, "konum", isim, soyisim, dogumTarihi, telefon, photoPath, idkullanıcılar]);
+        await db.execute('UPDATE kullanıcılar SET KullanıcıAdı = ?, sifre = ?, email = ?, cinsiyet = ?, konum = ST_PointFromText(?), isim = ?, soyisim = ?, dogumTarihi = ?, telefon = ?, photoPath = ? WHERE idkullanıcılar = ?', [KullanıcıAdı, hashedPassword, email, cinsiyet, `POINT(${enlem} ${boylam})`, isim, soyisim, dogumTarihi, telefon, photoPath, idkullanıcılar]);
         
 
         return res.render('user/profile_update', {
@@ -756,12 +767,16 @@ router.get("/register_render", function(req, res)
 });
 
 
-router.get("/register", function(req, res)
+router.get("/register", async function(req, res)
 {
     you_have_cookie(req, res);
+
+    const [kategoriler,] = await db.execute("SELECT * FROM ilgialanlari");
+
     res.render("user/register", {
         title: "Kullanıcı Kayıt",
         kutu_baslik: 'Kullanıcı Kayıt',
+        kategoriler: kategoriler,
         message: '',
         alert_type: '',
     });
@@ -810,9 +825,16 @@ router.post("/register", async function(req, res)
     try{
 
         //!! buraya konum eklenecek!! + kontrol
-        const {nick, isim, soyisim, dogumTarihi, cinsiyet, email, telefon, ilgi_alani, password, repassword } = req.body;
+        const {nick, isim, soyisim, dogumTarihi, cinsiyet, email, telefon, enlem, boylam, ilgi_alani, password, repassword } = req.body;
+
+        console.log(req.body);
+
+        const [kategoriler,] = await db.execute("SELECT * FROM ilgialanlari");
 
         //KONTROLLER
+        // enlem boylam bos mu veya undefined mi konrtol
+        //enlem
+        
         //nick 50'den fazla mı 0 dan az mı
         if(nick.length > 50 || nick.length <= 0)
         {
@@ -821,6 +843,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Kullanıcı Adı 50 karakterden fazla, 0 ve 0\'dan az olamaz',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //isim
@@ -831,6 +854,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'İsim 255 karakterden fazla, 0 ve 0\'dan az olamaz',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         else if(kontroller.harfDisindaKarakterVarMi(isim))
@@ -840,6 +864,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'İsimde harf dışında karakter var',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //soyisim
@@ -850,6 +875,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Soyisim 255 karakterden fazla, 0 ve 0\'dan az olamaz',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         else if(kontroller.harfDisindaKarakterVarMi(soyisim))
@@ -859,6 +885,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Soyisimde harf dışında karakter var',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //dogumTarihi
@@ -869,6 +896,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Doğum tarihi hatalı',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //dogumTarihi bugünden büyük olamaz
@@ -879,6 +907,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Doğum tarihi bugünden büyük olamaz',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //cinsiyet
@@ -889,6 +918,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 title: 'Kullanıcı Kayıt',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //email
@@ -899,6 +929,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Email 255 karakterden fazla, 0 ve 0\'dan az olamaz',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //
@@ -909,6 +940,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Email geçerli değil',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //telefon
@@ -919,6 +951,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Telefon numarası 10 karakterden fazla ya da az olamaz',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         else if(kontroller.sayiDisindaKarakterVarMi(telefon))
@@ -928,6 +961,17 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Telefon numarasında sayı dışında karakter var',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(!enlem || enlem ===  "" || enlem === undefined || boylam === "" || boylam === undefined) 
+        {
+            return res.render("user/register", {
+                title: "Kullanıcı Kayıt",
+                kutu_baslik: 'Kullanıcı Kayıt',
+                message: 'Konum bilgisi eksik',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //ilgi alani
@@ -938,6 +982,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'En az bir ilgi alanı seçilmelidir',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         //password
@@ -950,6 +995,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Bu kullanıcı adı zaten kullanımda',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
         else if(password !== repassword)
@@ -959,6 +1005,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Şifreler uyuşmuyor',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
 
@@ -970,6 +1017,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Bu email zaten kullanımda',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
 
@@ -981,6 +1029,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Bu telefon zaten kullanımda',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
 
@@ -992,6 +1041,7 @@ router.post("/register", async function(req, res)
                 kutu_baslik: 'Kullanıcı Kayıt',
                 message: 'Şifre en az bir harf, bir sayı ve bir karakter içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
                 alert_type: 'alert-danger',
+                kategoriler: kategoriler
             });
         }
 
@@ -999,7 +1049,7 @@ router.post("/register", async function(req, res)
         const hashedPassword = await bcrypt.hash(password, 10);
 
         //kullanici db'ye ekleme
-        await db.execute(`INSERT INTO kullanıcılar (KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon, photoPath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [nick, hashedPassword, email, cinsiyet, "konum", isim, soyisim, dogumTarihi, telefon, "/static/images/default_pp.png"]);
+        await db.execute(`INSERT INTO kullanıcılar (KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon, photoPath) VALUES (?, ?, ?, ?, POINT(?, ?), ?, ?, ?, ?, ?)`, [nick, hashedPassword, email, cinsiyet, enlem, boylam, isim, soyisim, dogumTarihi, telefon, "/static/images/default_pp.png"]);
 
         const [users_varmi] = await db.execute('SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?', [nick]);
 
@@ -1313,9 +1363,9 @@ router.get("/etkinlikler", async function(req, res){
         const [olusturduklarim_onaysiz,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [id, 0]);
         const [olusturduklarim_onayli,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [id, 1]);
 
-        const [katiliyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?)", [id]);
+        const [katiliyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
 
-        const [katilmiyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?)", [id]);
+        const [katilmiyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
 
         const [kategori,] = await db.execute("SELECT * FROM ilgialanlari");
         

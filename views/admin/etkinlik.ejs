@@ -30,7 +30,7 @@
                                     <div class="col-md-6">
                                         <div class="card-body">
                                             <h5 class="card-title">
-                                                <a style="text-decoration: none; color: black" href="/etkinlik/<%= etk.idetkinlikler %> "> <%= etk.etkinlikAdi %> </a>
+                                                <a style="text-decoration: none; color: black" href="/admin/etkinlik/<%= etk.idetkinlikler %> "> <%= etk.etkinlikAdi %> </a>
                                             </h5>
                                             <p class="card-text"><%= etk.aciklama %> </p>
                                             <p class="card-text"><strong>Kategori: </strong> <% kategori.forEach(kat => { %>
@@ -86,7 +86,7 @@
                                     <div class="col-md-6">
                                         <div class="card-body">
                                             <h5 class="card-title">
-                                                <a style="text-decoration: none; color: black" href="/etkinlik/<%= etk.idetkinlikler %> "> <%= etk.etkinlikAdi %> </a>
+                                                <a style="text-decoration: none; color: black" href="/admin/etkinlik/<%= etk.idetkinlikler %> "> <%= etk.etkinlikAdi %> </a>
                                             </h5>
                                             <p class="card-text"><%= etk.aciklama %> </p>
                                             <p class="card-text"><strong>Kategori: </strong> <% kategori.forEach(kat => { %>
@@ -117,11 +117,11 @@
                 </div>
             </div>
         </div>
-        <% if (message && message.length > 0) { %>
+        <% if (message2 && message2.length > 0) { %>
             <div class="row justify-content-center" style="margin-left: 90px;">
                 <div class="col-md-8">
-                    <div class="alert <%= alert_type %> row justify-content-center" role="alert">
-                        <%= message %>
+                    <div class="alert <%= alert_type2 %> row justify-content-center" role="alert">
+                        <%= message2 %>
                     </div>
                 </div>
             </div>

@@ -3,8 +3,11 @@
 <head>
     <%- include('../partials/head') %>
     <title>Profil Güncelleme</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     
-    
+    <style>
+        #map { height: 400px; margin-bottom: 20px; }
+    </style>
 </head>
 <body>
     <%- include('../partials/user/nav') %>
@@ -66,9 +69,11 @@
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="konum" class="col-sm-2 col-from-label">Konum:</label>
+                        <label class="col-sm-2 col-from-label">Konum:</label>
                         <div class="col-sm-8">
-                            <input type="text" class="form-control" id="konum" name="konum"  value="<%= konum %>">
+                            <div id="map"></div>
+                            <input type="hidden" id="enlem" name="enlem" value="<%= konum.x %>">
+                            <input type="hidden" id="boylam" name="boylam" value="<%= konum.y %>">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -103,6 +108,7 @@
         <% } %>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         const userId = "<%= idkullanıcılar %>"; // Kullanıcının ID'sini burada dinamik olarak ayarla
         // Fotoğraf alanına tıklandığında dosya seçme penceresini aç
@@ -139,6 +145,37 @@
                 console.error("Fotoğraf yükleme hatası:", error);
             });
         }
+    });
+
+
+
+    const etkinlikEnlem = parseFloat("<%= konum?.x || 39.9334 %>");
+        const etkinlikBoylam = parseFloat("<%= konum?.y || 32.8597 %>");
+    const map = L.map('map').setView([39.9334, 32.8597], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        maxZoom: 18,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker = L.marker([etkinlikEnlem, etkinlikBoylam]).addTo(map);
+
+    
+
+    map.on('click', function(e){
+        const {lat, lng} = e.latlng;
+
+        //marker update
+        if(marker){
+            marker.setLatLng(e.latlng);
+        }else{
+            marker = L.marker(e.latlng).addTo(map);
+        }
+
+        //inputlara bilgileri ekle
+        document.getElementById('enlem').value = lat;
+        document.getElementById('boylam').value = lng;
+
     });
     </script>
     

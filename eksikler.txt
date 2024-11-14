@@ -5,3 +5,6 @@ resim yükleme kısmında ariza var
 şifre seçmeye göre güncellenecek . aynı durum etkinliğe de yapılmalı
 
 etkilnik tarih olayi önceki tarih olayi ile aynı sorun olacak muhtemelen
+
+yetkiye göre hangi sayfalara girip girilmeyi ayarlanmali ör admin /user/'lı sayfalara girmesin gibi.
+

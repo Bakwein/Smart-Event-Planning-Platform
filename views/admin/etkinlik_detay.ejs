@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map { height: 400px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <%- include('../partials/admin/nav') %>
+    <div class="container mt-3">
+        <div class="container mt-3">
+            <div class="row">
+                <div class="col-md-12">
+                    <h1 class="h3 mb-3">Etkinlik Sayfası</h1>
+                    <div class="row">
+                        <div class="col-md-2">
+                            <img src="<%= etkinlik.photoPath %>" class="img-fluid" alt="">
+                        </div>
+                        <div class="col-md-5">
+                            <div class="card-body">
+                                <h4 class="card-name">
+                                    <a style="text-decoration: none; color: black" href="/admin/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
+                                </h4>
+                                <p class="card-text"><%= etkinlik.aciklama %> </p>
+                                <p class="card-text"><strong>Kategori: </strong> <% kategoriler.forEach(kat => { %>
+                                    <% if (kat.idilgiAlanlari == etkinlik.kategori) { %>
+                                        <%= kat.ilgiAlani %>
+                                    <% } %>
+                                <% }) %> </p>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex flex-column justify-content-center align-items-center text-center">
+                            <p><strong>Tarih: </strong><%= etkinlik.tarih.getDate() %>-<%= (etkinlik.tarih.getMonth() + 1) %>-<%= etkinlik.tarih.getFullYear() %></p>
+                            <p><strong>Saat: </strong><%= etkinlik.saat %></p>
+                            <p><strong>Süre: </strong><%= etkinlik.etkinlikSuresi %> Dakika</p>
+                        </div>
+                        <div class="col-md-3 d-flex flex-column align-items-center justify-content-center">
+                            <h5>Etkinlik Kurucusu: </h5>
+                            <div class="card w-100 h-100 mb-3">
+                                <div class="d-flex align-items-center p-3">
+                                    <img src="<%= kurucu.photoPath %>" alt="pp" class="img-fluid" style="max-width: 50px; height: 50px; margin-right: 10px;">
+                                    <div class="d-flex flex-column">
+                                        <p class="mb-0"><strong><%= kurucu.KullanıcıAdı %></strong></p>
+                                        <p class="mb-0"><%= kurucu.email %></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-8">
+                                <button type="button" onclick="toggleMap()" class="btn btn-primary mb-2">Haritayı Göster/Gizle</button>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-8">
+                                <div id="map"></div>
+                                <input type="hidden" id="enlem" name="enlem" value="<%= etkinlik.konum.x %>">
+                                <input type="hidden" id="boylam" name="boylam" value="<%= etkinlik.konum.y %>">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% if (message && message.length > 0) { %>
+            <div class="row justify-content-center" style="margin-left: 90px;">
+                <div class="col-md-8">
+                    <div class="alert <%= alert_type %> row justify-content-center" role="alert">
+                        <%= message %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        
+    function previewEventPhoto(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const output = document.getElementById('eventPhotoPreview');
+            output.src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+
+    }
+
+    //foto değiştiğinde
+    /*
+    document.getElementById('etkinlikFoto').addEventListener('change', function(e){
+        const file = e.target.files[0];
+        if(file)
+        {
+            const formData = new FormData();
+            formData.append('photo', file);
+            fetch('/upload_photo3', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if(response.redirected){
+                    window.location.href = response.url;
+                }else{
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if(data && data.photoPath){
+                    document.getElementById('eventPhotoPreview').src = data.photoPath;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+            });
+        }
+    });
+       */
+    const etkinlikEnlem = parseFloat("<%= etkinlik.konum?.x || 39.9334 %>");
+    const etkinlikBoylam = parseFloat("<%= etkinlik.konum?.y || 32.8597 %>");
+    const map = L.map('map').setView([etkinlikEnlem, etkinlikBoylam], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        maxZoom: 18,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker = L.marker([etkinlikEnlem, etkinlikBoylam]).addTo(map);
+
+    map.on('click', function(e){
+        const {lat, lng} = e.latlng;
+
+        //marker update
+        if(marker){
+            marker.setLatLng(e.latlng);
+        }else{
+            marker = L.marker(e.latlng).addTo(map);
+        }
+
+        //inputlara bilgileri ekle
+        document.getElementById('enlem').value = lat;
+        document.getElementById('boylam').value = lng;
+
+    });
+    </script>
+    
+    <script>
+        function toggleMap() {
+            const mapDiv = document.getElementById('map');
+            if (mapDiv.style.visibility === 'hidden') {
+                mapDiv.style.visibility = 'visible';
+                mapDiv.style.height = '400px';  // Haritanın yüksekliğini burada belirleyin.
+            } else {
+                mapDiv.style.visibility = 'hidden';
+                mapDiv.style.height = '0';
+            }
+        }
+    </script>
+</body>
+</html>
