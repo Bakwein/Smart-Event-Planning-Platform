@@ -68,7 +68,7 @@ router.get("/etkinlik", async function(req, res)
         const [kategori,] = await db.execute('SELECT * FROM ilgialanlari');
 
         res.render('admin/etkinlik', {
-            title: 'İlgiler',
+            title: 'Etkinlikler',
             onayGereken: onayGereken,
             etkinlikler: etkinlikler,
             kategori: kategori,
@@ -86,19 +86,155 @@ router.get("/etkinlik/update/:id", async function(req, res){
     cookie_control(req, res);
     const etkinlikID = req.params.id;
 
-    const [kategoriler, ] = await db.execute("select * from ilgialanlari");
-    const [etkinlik,] = await db.execute('SELECT * FROM etkinlik WHERE idetkinlikler = ?', [etkinlikID]);
+    const [etkinlik,] = await db.execute('SELECT * FROM etkinlikler WHERE idetkinlikler = ?', [etkinlikID]);
+
+    const [onayGereken,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 0');
+    const [etkinlikler,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1');
+    const [kategoriler,] = await db.execute('SELECT * FROM ilgialanlari');
+
+    if(etkinlik.length != 1)
+    {
+        res.render("admin/etkinlik", {
+            title: 'İlgiler',
+            onayGereken: onayGereken,
+            etkinlikler: etkinlikler,
+            kategori: kategori,
+            message: '',
+            alert_type: ''
+        });
+    }
+
+    const tarih = new Date(etkinlik[0].tarih).toISOString().split('T')[0];
 
     res.render("admin/update_etkinlik", {
-        title: "Etkinlik Oluştur",
+        title: "Etkinlik Düzenle",
         message: '',
         alert_type: '',
-        kategoriler: kategoriler,
-        etkinlik : etkinlik
+        photoPath: etkinlik[0].photoPath,
+        etkinlikAdi : etkinlik[0].etkinlikAdi,
+        tarih: tarih,
+        saat: etkinlik[0].saat,
+        sure: etkinlik[0].etkinlikSuresi,
+        kategori: etkinlik[0].kategori,
+        aciklama: etkinlik[0].aciklama,
+        konum: etkinlik[0].konum,
+        kategoriler: kategoriler
     });
 });
 
-//BURDAN DEVAM
+const upload = require("../multer");
+
+router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async function(req, res){
+    cookie_control(req, res);
+    try{
+        //console.log(req.body);
+        const etkinlikID = req.params.id;
+        const [kategoriler, ] = await db.execute("select * from ilgialanlari");
+        const [onayGereken,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 0');
+        const [etkinlikler,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1');
+        const {etkinlikFoto, etkinlikAdi, tarih, saat, etkinlikSuresi, kategori, aciklama, enlem, boylam} = req.body;
+
+        const etkinlikFotoPath = req.file ? "/static" + req.file.path.split('public')[1] : "/static/images/event.png";
+
+        //kontroller
+        if(etkinlikAdi.length > 255 || etkinlikAdi.length <= 0)
+        {
+            return res.render("admin/etkinlik", {
+                title: 'İlgiler',
+                onayGereken: onayGereken,
+                etkinlikler: etkinlikler,
+                kategori: kategori,
+                message: 'Etkinlik adı 255 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger'
+            });
+        }
+        else if(aciklama.length > 10000 || aciklama.length <= 0)
+        {
+            return res.render("admin/etkinlik", {
+                title: 'İlgiler',
+                onayGereken: onayGereken,
+                etkinlikler: etkinlikler,
+                kategori: kategori,
+                message: 'Açıklama 10000 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger',
+            });
+        }
+        else if(!kontroller.isValidDate(tarih))
+        {
+            return res.render("admin/etkinlik", {
+                title: 'İlgiler',
+                onayGereken: onayGereken,
+                etkinlikler: etkinlikler,
+                kategori: kategori,
+                message: 'Tarih hatalı',
+                alert_type: 'alert-danger',
+            });
+        }
+        else if(!kontroller.isValidTime(saat))
+        {
+            return res.render("admin/etkinlik", {
+                title: 'İlgiler',
+                onayGereken: onayGereken,
+                etkinlikler: etkinlikler,
+                kategori: kategori,
+                message: 'Saat hatalı',
+                alert_type: 'alert-danger',
+            });
+        }
+        else if(etkinlikSuresi <= 0)
+        {
+            return res.render("admin/etkinlik", {
+                title: 'İlgiler',
+                onayGereken: onayGereken,
+                etkinlikler: etkinlikler,
+                kategori: kategori,
+                message: 'Etkinlik süresi 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger',
+            });
+        }
+        else if(kategori === "0")
+        {
+            return res.render("admin/etkinlik", {
+                title: 'İlgiler',
+                onayGereken: onayGereken,
+                etkinlikler: etkinlikler,
+                kategori: kategori,
+                message: 'Kategori seçilmelidir',
+                alert_type: 'alert-danger',
+            });
+        }
+
+
+
+        console.log(etkinlikFotoPath);
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        await db.execute("UPDATE etkinlikler SET etkinlikAdi = ?, aciklama = ?, tarih = ?, saat = ?, etkinlikSuresi = ?, konum = POINT(?, ?), kategori = ?, photoPath = ?, olusturanidkullaniciR = ? WHERE idetkinlikler = ?", [etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, enlem, boylam, kategori, etkinlikFotoPath, id, etkinlikID]);
+
+        const [kategoriler2, ] = await db.execute("select * from ilgialanlari");
+        const [onayGereken2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 0');
+        const [etkinlikler2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1');
+
+        res.render("admin/etkinlik", {
+            title: 'İlgiler',
+            onayGereken: onayGereken2,
+            etkinlikler: etkinlikler2,
+            kategori: kategoriler2,
+            message: 'Etkinlik başarıyla düzenlendi',
+            alert_type: 'alert-success',
+        });
+
+
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+   
+});
 
 router.get('/etkinlik/approve/:id', async function(req, res){
     try{

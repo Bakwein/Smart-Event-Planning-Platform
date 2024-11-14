@@ -19,7 +19,7 @@
         <div class="container mt-3">
             <div class="row">
                 <div class="col-md-12">
-                    <h1 class="h3 mb-3">Etkinlikler</h1>
+                    <h1 class="h3 mb-3">Onay Bekleyen Etkinlikler</h1>
                     <% if (onayGereken.length > 0) { %>
                         <% onayGereken.forEach(etk => { %>                    
                             <div class="card mb-3">
@@ -57,6 +57,61 @@
                         <% } else { %>
                             <div class="alert alert-warning text-center" role="alert">
                                 Onay bekleyen etkinlik bulunmamaktadır.
+                            </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% if (message && message.length > 0) { %>
+            <div class="row justify-content-center" style="margin-left: 90px;">
+                <div class="col-md-8">
+                    <div class="alert <%= alert_type %> row justify-content-center" role="alert">
+                        <%= message %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+
+        <div class="container mt-3">
+            <div class="row">
+                <div class="col-md-12">
+                    <h1 class="h3 mb-3">Onaylı Etkinlikler</h1>
+                    <% if (etkinlikler.length > 0) { %>
+                        <% etkinlikler.forEach(etk => { %>                    
+                            <div class="card mb-3">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <img src="<%= etk.photoPath %>" class="img-fluid" alt="">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <a style="text-decoration: none; color: black" href="/etkinlik/<%= etk.idetkinlikler %> "> <%= etk.etkinlikAdi %> </a>
+                                            </h5>
+                                            <p class="card-text"><%= etk.aciklama %> </p>
+                                            <p class="card-text"><strong>Kategori: </strong> <% kategori.forEach(kat => { %>
+                                                <% if (kat.idilgiAlanlari == etk.kategori) { %>
+                                                    <%= kat.ilgiAlani %>
+                                                <% } %>
+                                            <% }) %> </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex flex-column justify-content-center align-items-center text-center">
+                                        <p><strong>Tarih: </strong><%= etk.tarih.getDate() %>-<%= (etk.tarih.getMonth() + 1) %>-<%= etk.tarih.getFullYear() %></p>
+                                        <p><strong>Saat: </strong><%= etk.saat %></p>
+                                        <p><strong>Süre: </strong><%= etk.etkinlikSuresi %> Dakika</p>
+                                    </div>
+                                    <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
+                                        <a class="btn btn-primary mb-2" href="/admin/etkinlik/update/<%= etk.idetkinlikler %>">Düzenle</a>
+                                        <a class="btn btn-danger" href="/admin/etkinlik/delete/<%= etk.idetkinlikler %>">Sil</a>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+
+                        <% } else { %>
+                            <div class="alert alert-warning text-center" role="alert">
+                                Onaylı etkinlik bulunmamaktadır.
                             </div>
                     <% } %>
                 </div>
