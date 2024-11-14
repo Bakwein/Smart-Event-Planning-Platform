@@ -18,39 +18,44 @@
     <div class="container mt-3">
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>İlgilerim</h3>
-            </div>
-            <div class="col-md-12 mt-3">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th style="width:50px">Etkinlik Id</th>
-                            <th>Etkinlik Adı</th>
-                            <th>Tarih</th>
-                            <th>Saat</th>
-                            <th>Etkinlik Suresi</th>
-                            <th>Konum</th>
-                            <th>Kategori</th>
-
-                            <th style="width:130px"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% ilgiler.forEach(ilgi => { %>
-                            <tr>
-                                <td>
-                                    <%= ilgi.idilgiAlanlari %>
-                                </td>
-                                <td>
-                                    <%= ilgi.ilgiAlani %>   
-                                </td>
-                                <td>
-                                    <a class="btn btn-sm btn-danger" href="/user/ilgi_list/delete/<%=ilgi.idilgiAlanlari%>">Sil</a>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+                <h3>Onay Bekleyen Etkinliklerim</h3>
+                <% if (olusturduklarim_onaysiz.length > 0) { %>
+                    <% olusturduklarim_onaysiz.forEach(etkinlik => { %>
+                        <div class="card mb-3">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <img src="<%=etkinlik.photoPath%>" class="img-fluid" alt="">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a style="text-decoration: none; color: black;" href="/ etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.  etkinlikAdi %> </a>
+                                        </h5>
+                                        <p class="card-text"><%= etkinlik.aciklama %> </p>
+                                            <p class="card-text"><strong>Kategori: </strong> <% kategori.   forEach(kat => { %>
+                                                <% if (kat.idilgiAlanlari == etkinlik.kategori) { %>
+                                                    <%= kat.ilgiAlani %>
+                                                <% } %>
+                                            <% }) %> </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column justify-content-center  align-items-center text-center">
+                                    <p><strong>Tarih: </strong><%= etkinlik.tarih.getDate() %>-<%=  (etkinlik.tarih.getMonth() + 1) %>-<%= etkinlik.tarih.getFullYear()  %></p>
+                                    <p><strong>Saat: </strong><%= etkinlik.saat %></p>
+                                    <p><strong>Süre: </strong><%= etkinlik.etkinlikSuresi %> Dakika</p>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column align-items-center  justify-content-center">
+                                    <a class="btn btn-primary mb-2" href="/user/etkinlik/update/:<%=     etkinlik.idetkinlikler %>">Düzenle</a>
+                                    <a class="btn btn-danger" href="/user/etkinlik/decline/:<%= etkinlik.    idetkinlikler %>">Sil</a>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="alert alert-warning text-center" role="alert">
+                        Onay bekleyen etkinlik bulunmamaktadır.
+                    </div>
+                <% } %>
             </div>
         </div>
         <% if (message && message.length > 0) { %>
@@ -62,49 +67,160 @@
                 </div>
             </div>
         <% } %>
-    </div>
-
-    <div class="container mt-3">
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Sahip Olmadığım İlgiler</h3>
-            </div>
-            <div class="col-md-12 mt-3">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th style="width:50px">İlgi Id</th>
-                            <th>İlgi Alanı</th>
-                            <th style="width:130px"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% nonilgiler.forEach(nonilgi => { %>
-                            <tr>
-                                <td>
-                                    <%= nonilgi.idilgiAlanlari %>
-                                </td>
-                                <td>
-                                    <%= nonilgi.ilgiAlani %>   
-                                </td>
-                                <td>
-                                    <a class="btn btn-sm btn-danger" href="/user/ilgi_list/add/<%=nonilgi.idilgiAlanlari%>">Ekle</a>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+                <h3>Onaylanmış Etkinliklerim</h3>
+                <% if (olusturduklarim_onayli.length > 0) { %>
+                    <% olusturduklarim_onayli.forEach(etkinlik => { %>
+                        <div class="card mb-3">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <img src="<%=etkinlik.photoPath%>" class="img-fluid" alt="">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a style="text-decoration: none; color: black;" href="/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
+                                        </h5>
+                                        <p class="card-text"><%= etkinlik.aciklama %> </p>
+                                            <p class="card-text"><strong>Kategori: </strong> <% kategori.forEach(kat => { %>
+                                                <% if (kat.idilgiAlanlari == etkinlik.kategori) { %>
+                                                    <%= kat.ilgiAlani %>
+                                                <% } %>
+                                            <% }) %> </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column justify-content-center align-items-center text-center">
+                                    <p><strong>Tarih: </strong><%= etkinlik.tarih.getDate() %>-<%= (etkinlik.tarih.getMonth() + 1) %>-<%= etkinlik.tarih.getFullYear() %></p>
+                                    <p><strong>Saat: </strong><%= etkinlik.saat %></p>
+                                    <p><strong>Süre: </strong><%= etkinlik.etkinlikSuresi %> Dakika</p>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
+                                    <a class="btn btn-primary mb-2" href="/user/etkinlik/update2/<%= etkinlik.idetkinlikler %>">Düzenle</a>
+                                    <a class="btn btn-danger" href="/user/etkinlik/delete2/<%= etkinlik.idetkinlikler %>">Sil</a>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="alert alert-warning text-center" role="alert">
+                        Onaylanmış etkinlik bulunmamaktadır.
+                    </div>
+                <% } %>
             </div>
         </div>
-        <% if (message && message.length > 0) { %>
+        <% if (message2 && message2.length > 0) { %>
             <div class="row justify-content-center" style="margin-left: 90px;">
                 <div class="col-md-8">
-                    <div class="alert <%= alert_type %> row justify-content-center" role="alert">
-                        <%= message %>
+                    <div class="alert <%= alert_type2 %> row justify-content-center" role="alert">
+                        <%= message2 %>
                     </div>
                 </div>
             </div>
         <% } %>
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <h3>Katıldığım Etkinlikler</h3>
+                <% if (katiliyorum.length > 0) { %>
+                    <% katiliyorum.forEach(etkinlik => { %>
+                        <div class="card mb-3">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <img src="<%=etkinlik.photoPath%>" class="img-fluid" alt="">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a style="text-decoration: none; color: black;" href="/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
+                                        </h5>
+                                        <p class="card-text"><%= etkinlik.aciklama %> </p>
+                                            <p class="card-text"><strong>Kategori: </strong> <% kategori.forEach(kat => { %>
+                                                <% if (kat.idilgiAlanlari == etkinlik.kategori) { %>
+                                                    <%= kat.ilgiAlani %>
+                                                <% } %>
+                                            <% }) %> </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column justify-content-center align-items-center text-center">
+                                    <p><strong>Tarih: </strong><%= etkinlik.tarih.getDate() %>-<%= (etkinlik.tarih.getMonth() + 1) %>-<%= etkinlik.tarih.getFullYear() %></p>
+                                    <p><strong>Saat: </strong><%= etkinlik.saat %></p>
+                                    <p><strong>Süre: </strong><%= etkinlik.etkinlikSuresi %> Dakika</p>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
+                                    <a class="btn btn-danger" href="/user/etkinlik/leave/<%= etkinlik.idetkinlikler %>">Ayrıl</a>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="alert alert-warning text-center" role="alert">
+                        Katıldığınız etkinlik bulunmamaktadır.
+                    </div>
+                <% } %>
+                
+            </div>
+        </div>
+        <% if (message3 && message3.length > 0) { %>
+            <div class="row justify-content-center" style="margin-left: 90px;">
+                <div class="col-md-8">
+                    <div class="alert <%= alert_type3 %> row justify-content-center" role="alert">
+                        <%= message3 %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <h3>Katılabileceğim Etkinlikler</h3>
+                <% if (katilmiyorum.length > 0) { %>
+                    <% katilmiyorum.forEach(etkinlik => { %>
+                        <div class="card mb-3">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <img src="<%=etkinlik.photoPath%>" class="img-fluid" alt="">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a style="text-decoration: none; color: black;" href="/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
+                                        </h5>
+                                        <p class="card-text"><%= etkinlik.aciklama %> </p>
+                                            <p class="card-text"><strong>Kategori: </strong> <% kategori.forEach(kat => { %>
+                                                <% if (kat.idilgiAlanlari == etkinlik.kategori) { %>
+                                                    <%= kat.ilgiAlani %>
+                                                <% } %>
+                                            <% }) %> </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column justify-content-center align-items-center text-center">
+                                    <p><strong>Tarih: </strong><%= etkinlik.tarih.getDate() %>-<%= (etkinlik.tarih.getMonth() + 1) %>-<%= etkinlik.tarih.getFullYear() %></p>
+                                    <p><strong>Saat: </strong><%= etkinlik.saat %></p>
+                                    <p><strong>Süre: </strong><%= etkinlik.etkinlikSuresi %> Dakika</p>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
+                                    <a class="btn btn-success" href="/user/etkinlik/join/<%= etkinlik.idetkinlikler %>">Katıl</a>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="alert alert-warning text-center" role="alert">
+                        Katılmadığınız etkinlik bulunmamaktadır.
+                    </div>
+                <% } %>
+                
+            </div>
+        </div>
+        <% if (message4 && message4.length > 0) { %>
+            <div class="row justify-content-center" style="margin-left: 90px;">
+                <div class="col-md-8">
+                    <div class="alert <%= alert_type4 %> row justify-content-center" role="alert">
+                        <%= message4 %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+            
     </div>
 </body>
 </html>

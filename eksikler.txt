@@ -2,6 +2,6 @@ resim yükleme kısmında ariza var
 
 şifre yazma kontroller tamam kimin değiştirdiğinin ayarlanmasi lazim
 
-admin: ilgi ekleme/düzenleme
+şifre seçmeye göre güncellenecek . aynı durum etkinliğe de yapılmalı
 
-şifre seçmeye göre güncellenecek
+etkilnik tarih olayi önceki tarih olayi ile aynı sorun olacak muhtemelen

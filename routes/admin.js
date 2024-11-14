@@ -54,6 +54,124 @@ function you_have_cookie(req, res)
     }
 }
 
+router.get("/etkinlik", async function(req, res)
+{
+    cookie_control(req, res);
+
+    try{
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [onayGereken,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 0');
+        const [etkinlikler,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1');
+        const [kategori,] = await db.execute('SELECT * FROM ilgialanlari');
+
+        res.render('admin/etkinlik', {
+            title: 'İlgiler',
+            onayGereken: onayGereken,
+            etkinlikler: etkinlikler,
+            kategori: kategori,
+            message: '',
+            alert_type: ''
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.get("/etkinlik/update/:id", async function(req, res){
+    cookie_control(req, res);
+    const etkinlikID = req.params.id;
+
+    const [kategoriler, ] = await db.execute("select * from ilgialanlari");
+    const [etkinlik,] = await db.execute('SELECT * FROM etkinlik WHERE idetkinlikler = ?', [etkinlikID]);
+
+    res.render("admin/update_etkinlik", {
+        title: "Etkinlik Oluştur",
+        message: '',
+        alert_type: '',
+        kategoriler: kategoriler,
+        etkinlik : etkinlik
+    });
+});
+
+//BURDAN DEVAM
+
+router.get('/etkinlik/approve/:id', async function(req, res){
+    try{
+        const etkinlikID = req.params.id;
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [onayGereken,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 0');
+        const [etkinlikler,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1');
+        const [kategori,] = await db.execute('SELECT * FROM ilgialanlari');
+        
+        const [kontrol,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1 AND idetkinlikler = ?', [etkinlikID]);
+        if(kontrol.length > 0)
+        {
+            res.render('admin/etkinlik', {
+                title: 'İlgiler',
+                onayGereken: onayGereken,
+                etkinlikler: etkinlikler,
+                kategori: kategori,
+                message: 'Bu etkinlik zaten onaylı',
+                alert_type: ''
+            });
+        }
+
+        await db.execute('UPDATE etkinlikler SET durum = ? WHERE idetkinlikler = ?', [1, etkinlikID]);
+        const [kontrol2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1 AND idetkinlikler = ?', [etkinlikID]);
+        await db.execute('INSERT INTO katilimcilar(idkullaniciR, idetkinlikR) VALUES (?,?)', [kontrol2[0].olusturanidkullaniciR, etkinlikID]);
+
+        const [onayGereken2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 0');
+        const [etkinlikler2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1');
+        const [kategori2,] = await db.execute('SELECT * FROM ilgialanlari');
+
+        res.render('admin/etkinlik', {
+            title: 'İlgiler',
+            onayGereken: onayGereken2,
+            etkinlikler: etkinlikler2,
+            kategori: kategori2,
+            message: '',
+            alert_type: ''
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.get('/etkinlik/delete/:id', async function(req, res){
+    try{
+        const etkinlikID = req.params.id;
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [kontrol,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler = ?", [etkinlikID]);
+        if(kontrol.length === 0)
+        {
+            return res.redirect('/admin/etkinlik');
+        }
+
+        await db.execute("DELETE FROM etkinlikler WHERE idetkinlikler = ?", [etkinlikID]);
+
+        res.redirect("/admin/etkinlik")
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
 router.get("/interests", async function(req, res)
 {
     cookie_control(req, res);
