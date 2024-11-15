@@ -8,6 +8,7 @@ const kontroller = require('../kontroller');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { title } = require("process");
+const moment = require('moment');
 
 function cookie_control(req, res)
 {
@@ -73,7 +74,9 @@ router.get("/etkinlik", async function(req, res)
             etkinlikler: etkinlikler,
             kategori: kategori,
             message: '',
-            alert_type: ''
+            alert_type: '',
+            message2: '',
+            alert_type2: ''
         });
     }
     catch(err)
@@ -112,6 +115,8 @@ router.get("/etkinlik/update/:id", async function(req, res){
         title: "Etkinlik Düzenle",
         message: '',
         alert_type: '',
+        message2: '',
+        alert_type2: '',
         photoPath: etkinlik[0].photoPath,
         etkinlikAdi : etkinlik[0].etkinlikAdi,
         tarih: tarih,
@@ -148,8 +153,8 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
                 kategori: kategori,
                 message: 'Etkinlik adı 255 karakterden fazla, 0 ve 0\'dan az olamaz',
                 alert_type: 'alert-danger',
-                message2: '',
-                alert_type2: ''
+                message2: 'Etkinlik adı 255 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type2: 'alert-danger'
 
             });
         }
@@ -163,7 +168,7 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
                 message: 'Açıklama 10000 karakterden fazla, 0 ve 0\'dan az olamaz',
                 alert_type: 'alert-danger',
                 message2: '',
-                alert_type2: ''
+                alert_type2: 'alert-danger'
             });
         }
         else if(!kontroller.isValidDate(tarih))
@@ -176,7 +181,7 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
                 message: 'Tarih hatalı',
                 alert_type: 'alert-danger',
                 message2: '',
-                alert_type2: ''
+                alert_type2: 'alert-danger'
             });
         }
         else if(!kontroller.isValidTime(saat))
@@ -189,7 +194,7 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
                 message: 'Saat hatalı',
                 alert_type: 'alert-danger',
                 message2: '',
-                alert_type2: ''
+                alert_type2: 'alert-danger'
             });
         }
         else if(etkinlikSuresi <= 0)
@@ -202,7 +207,7 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
                 message: 'Etkinlik süresi 0 ve 0\'dan az olamaz',
                 alert_type: 'alert-danger',
                 message2: '',
-                alert_type2: ''
+                alert_type2: 'alert-danger'
             });
         }
         else if(kategori === "0")
@@ -215,7 +220,7 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
                 message: 'Kategori seçilmelidir',
                 alert_type: 'alert-danger',
                 message2: '',
-                alert_type2: ''
+                alert_type2: 'alert-danger'
             });
         }
 
@@ -227,7 +232,7 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         const id = decoded.id;
 
-        await db.execute("UPDATE etkinlikler SET etkinlikAdi = ?, aciklama = ?, tarih = ?, saat = ?, etkinlikSuresi = ?, konum = POINT(?, ?), kategori = ?, photoPath = ?, olusturanidkullaniciR = ? WHERE idetkinlikler = ?", [etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, enlem, boylam, kategori, etkinlikFotoPath, id, etkinlikID]);
+        await db.execute("UPDATE etkinlikler SET etkinlikAdi = ?, aciklama = ?, tarih = ?, saat = ?, etkinlikSuresi = ?, konum = POINT(?, ?), kategori = ?, photoPath = ? WHERE idetkinlikler = ?", [etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, enlem, boylam, kategori, etkinlikFotoPath, etkinlikID]);
 
         const [kategoriler2, ] = await db.execute("select * from ilgialanlari");
         const [onayGereken2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 0');
@@ -241,7 +246,7 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
             message: 'Etkinlik başarıyla düzenlendi',
             alert_type: 'alert-success',
             message2: '',
-            alert_type2: ''
+            alert_type2: 'alert-success'
         });
 
 
@@ -274,9 +279,9 @@ router.get('/etkinlik/approve/:id', async function(req, res){
                 etkinlikler: etkinlikler,
                 kategori: kategori,
                 message: 'Bu etkinlik zaten onaylı',
-                alert_type: '',
+                alert_type: 'alert-danger',
                 message2: '',
-                alert_type2: ''
+                alert_type2: 'alert-danger'
             });
         }
 
@@ -332,7 +337,7 @@ router.get('/etkinlik/delete/:id', async function(req, res){
 router.get('/etkinlik/:id', async function(req, res){
     try{
         const etkinlikID = req.params.id;
-
+    
         const token = req.cookies.token;
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         const id = decoded.id;
@@ -340,16 +345,14 @@ router.get('/etkinlik/:id', async function(req, res){
         const [kategoriler,] = await db.execute("SELECT * FROM ilgialanlari");
         const [kontrol,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler = ?", [etkinlikID]);
         const [kurucu,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kontrol[0].olusturanidkullaniciR]);
+        const [mesajlar,] = await db.execute("SELECT * FROM mesajlar WHERE idetkinlikR = ? ORDER BY tarih ASC", [etkinlikID]);
+
         if(kontrol.length === 0)
         {
             return res.redirect('/admin/etkinlik');
         }
-        if(kurucu.length === 0)
-        {
-            return res.redirect('/admin/etkinlik');
-        }
 
-
+        const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
         const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
         
         res.render('admin/etkinlik_detay', {
@@ -358,6 +361,8 @@ router.get('/etkinlik/:id', async function(req, res){
             kategoriler: kategoriler,
             kurucu: kurucu[0],
             tarih: tarih,
+            mesajlar: mesajlar,
+            kullanıcılar: kullanicilar,
             message: '',
             alert_type: '',
             message2: '',
@@ -368,6 +373,43 @@ router.get('/etkinlik/:id', async function(req, res){
     {
         console.log(err);
     }
+});
+
+router.post("/send-message", async function(req, res)
+{
+    console.log(req.body);
+
+    const {mesaj,eventId} = req.body;
+    const [kategoriler,] = await db.execute("SELECT * FROM ilgialanlari");
+    const [kontrol,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler = ?", [eventId]);
+    const [kurucu,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kontrol[0].olusturanidkullaniciR]);
+    const [mesajlar,] = await db.execute("SELECT * FROM mesajlar WHERE idetkinlikR = ? ORDER BY tarih ASC", [eventId]);
+    const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
+
+    if(mesaj.length == 0)
+    {
+        return res.render('admin/etkinlik_detay', {
+            title: 'Etkinlik Sayfasi',
+            etkinlik: kontrol[0],
+            kategoriler: kategoriler,
+            kurucu: kurucu[0],
+            tarih: tarih,
+            mesajlar: mesajlar,
+            kullanıcılar: kullanicilar, 
+            message: '',
+            alert_type: '',
+            message2: 'Boş mesaj gönderemezsiniz',
+            alert_type2: 'alert-danger'
+        })
+    }
+    else if(kontrol.length == 0)
+    {
+        return res.redirect('admin/etkinlik');
+    }
+
+    await db.execute("INSERT INTO mesajlar(idgonderen, idetkinlikR, mesaj, tarih) VALUES(?,?,?,?)", [0, eventId, mesaj, moment().format('YYYY-MM-DD HH:mm:ss')]);
+
+    return res.redirect(`/admin/etkinlik/${eventId}`);
 });
 
 router.get("/interests", async function(req, res)

@@ -203,6 +203,26 @@ async function create_katilimcilar_table()
     }
 }
 
+async function create_mesajlar_table()
+{
+    try{
+        await db.execute(`CREATE TABLE IF NOT EXISTS mesajlar (
+            idmesajlar int NOT NULL AUTO_INCREMENT,
+            idgonderen INT NOT NULL,
+            idetkinlikR INT NOT NULL,
+            mesaj text NOT NULL,
+            tarih datetime NOT NULL,
+            PRIMARY KEY (idmesajlar),
+            KEY idetkinlikR_idx (idetkinlikR),
+            CONSTRAINT fk_etkinlikler2 FOREIGN KEY (idetkinlikR) REFERENCES etkinlikler (idetkinlikler) ON DELETE CASCADE ON UPDATE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;`);
+          console.log("mesajlar table is created!");
+    }
+    catch(err)
+    {
+        console.log("mesajlar table creation error: " + err);
+    }
+}
 
 
 //tables
@@ -213,6 +233,7 @@ create_ilgi_alanlari_table();
 create_kullanici_ilgileri_table();
 create_etkinlik_table();
 create_katilimcilar_table();
+create_mesajlar_table();
 
 //admin
 create_admin("admin", "admin");
