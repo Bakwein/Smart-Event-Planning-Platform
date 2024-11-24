@@ -136,6 +136,52 @@
             border-radius: 1000px;
             vertical-align: bottom;
         }
+
+        .katilimcilar {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .katilimcilar h2 {
+            margin-bottom: 20px;
+        }
+
+        .kutu {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .kutu span {
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .kaldir {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            line-height: 15px;
+            margin-top: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .panel-body .chats {
+            max-height: 500px; /* Maksimum yükseklik */
+            overflow-y: auto; /* Dikey kaydırma çubuğu */
+            padding-right: 10px; /* Kaydırma çubuğuna yapışmaması için sağ boşluk */
+        }
     </style>
 </head>
 <body>
@@ -169,7 +215,7 @@
                         </div>
                         <div class="col-md-3 d-flex flex-column align-items-center justify-content-center">
                             <h5>Etkinlik Kurucusu: </h5>
-                            <% if (typeof kurucu !== 'undefined' && kurucu.length > 0 ) { %>
+                            <% if (typeof kurucu !== 'undefined') { %>
                                 <div class="card w-100 h-100 mb-3">
                                     <div class="d-flex align-items-center p-3">
                                         <img src="<%= kurucu.photoPath %>" alt="pp" class="img-fluid" style="max-width: 50px; height: 50px; margin-right: 10px;">
@@ -186,7 +232,16 @@
                             
                         </div>
                         <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
-                            <!-- katil/ ayril vs. eklenecek . sahibiyse düzenle de yapabilmeli-->
+                            <% if (typeof kurucu !== 'undefined' && kurucu.idkullanıcılar == kullanici_id) { %>
+                                <a class="btn btn-primary mb-2" href="/admin/etkinlik/update/<%= etkinlik.idetkinlikler %>">Düzenle</a>
+                                <a class="btn btn-danger mb-2" href="/admin/etkinlik/delete/<%= etkinlik.idetkinlikler %>">Sil</a>
+                            <% } %>
+                            <% const katilimciVarMi = katilimci.find(k => k.idkullaniciR === kullanici_id); %>
+                            <% if (katilimciVarMi) { %>
+                                <a class="btn btn-danger" href="/user/etkinlik/leave2/<%= etkinlik.idetkinlikler %>">Ayrıl</a>
+                            <% } else { %>
+                                <a class="btn btn-success" href="/user/etkinlik/join2/<%= etkinlik.idetkinlikler %>">Katıl</a>
+                            <% } %>
                         </div>
                         <div class="row mb-3">
                             <div class="col-sm-8">
@@ -195,7 +250,7 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-sm-8">
-                                <div id="map" style="visibility: hidden;"></div>
+                                <div id="map"></div>
                                 <input type="hidden" id="enlem" name="enlem" value="<%= etkinlik.konum.x %>">
                                 <input type="hidden" id="boylam" name="boylam" value="<%= etkinlik.konum.y %>">
                             </div>
@@ -213,6 +268,31 @@
                 </div>
             </div>
         <% } %>
+
+        <div class="katilimcilar">
+            <div id="katilimciShow"></div>
+            <h2>KATILIMCILAR</h2>
+            <% if (katilimci.length == 0) { %>
+                <p>Katılımcı bulunmamaktadır.</p>
+            <% } else { %>
+                <% katilimci.forEach(kati => { %>
+                    <div class="kutu">
+                        <span><%= kati.KullanıcıAdı %></span>
+                        <% if (etkinlik.olusturanidkullaniciR == kullanici_id) { %>
+                            <a class="kaldir" style="text-decoration: none; color: inherit;" href="/user/katilimci/delete/<%= kati.idkatilimcilar %>">X</a>
+                        <% } %>
+                      </div>
+                <% }) %>
+            <% } %>
+            <% if (message3 && message3.length > 0) { %>
+                <div class="row justify-content-center" style="margin-left: 90px;">
+                    <div class="col-md-8">
+                        <div class="alert <%= alert_type3 %> row justify-content-center" role="alert">
+                            <%= message3 %>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
     </div>
 
     <div class="container bootstrap snippets bootdeys">
@@ -319,6 +399,7 @@
                   <input type="hidden" id="eventId" name="eventId" value="<%= etkinlik.idetkinlikler %>"> 
                   <span class="input-group-btn">
                     <button class="btn btn-primary" type="submit">Gönder</button>
+                    <div id="messageShow"></div>
                   </span>
                 </div>
               </form>
@@ -419,6 +500,22 @@
                 mapDiv.style.height = '0';
             }
         }
+    </script>
+
+    <script>
+        // Sohbet div'inin scroll'ını en alta ayarla
+        function scrollToBottom() {
+          const chatContainer = document.getElementsByClassName('chats')[0];
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+        }
+
+        // Sayfa yüklendiğinde çalıştır
+        document.addEventListener('DOMContentLoaded', scrollToBottom);
+
+        // Mesaj gönderildikten sonra otomatik çalışması için
+        window.onload = scrollToBottom;
     </script>
 </body>
 </html>

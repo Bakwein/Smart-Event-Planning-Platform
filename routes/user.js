@@ -1471,6 +1471,82 @@ router.get("/etkinlik/join/:id", async function(req, res){
     }
 });
 
+router.get("/etkinlik/join2/:id", async function(req, res){
+    
+    try{
+        const id = req.params.id;
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const kullanici_id = decoded.id;
+
+        const [olusturduklarim_onaysiz,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [kullanici_id, 0]);
+        const [olusturduklarim_onayli,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [kullanici_id, 1]);
+
+        const [katiliyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?)", [kullanici_id]);
+
+        const [katilmiyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?)", [kullanici_id]);
+
+        const [kategori,] = await db.execute("SELECT * FROM ilgialanlari");
+
+
+        const [etkinlik,] = await db.execute("select * from etkinlikler where idetkinlikler = ?", [id]);
+
+        if(etkinlik.length === 0)
+        {
+            return res.render("user/etkinlikler", {
+                title: "Etkinliklerim",
+                kategori: kategori,
+                olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+                olusturduklarim_onayli: olusturduklarim_onayli,
+                katiliyorum: katiliyorum,
+                katilmiyorum: katilmiyorum,
+                message: '',
+                alert_type: '',
+                message2: '',
+                alert_type2: '',
+                message3: '',
+                alert_type3: '',
+                message4: 'Etkinlik Bulunamadı!',
+                alert_type4: 'alert-danger',
+    
+            });
+        }
+
+        const [katilimci_kontrol,] = await db.execute("select * from katilimcilar where idkullaniciR = ? AND idetkinlikR = ?", [kullanici_id, id]);
+        if(katilimci_kontrol > 0)
+        {
+            return res.render("user/etkinlikler", {
+                title: "Etkinliklerim",
+                kategori: kategori,
+                olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+                olusturduklarim_onayli: olusturduklarim_onayli,
+                katiliyorum: katiliyorum,
+                katilmiyorum: katilmiyorum,
+                message: '',
+                alert_type: '',
+                message2: '',
+                alert_type2: '',
+                message3: '',
+                alert_type3: '',
+                message4: 'Bu katılımcı etkinliğe katılmış!',
+                alert_type4: 'alert-danger',
+    
+            });
+        }
+
+        await db.execute("INSERT INTO katilimcilar(idkullaniciR, idetkinlikR) VALUES (?, ?)", [kullanici_id, id]);
+
+        res.redirect(`/user/etkinlik/${id}`)
+
+        
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
 
 router.get("/etkinlik/leave/:id", async function(req, res){
     
@@ -1549,6 +1625,86 @@ router.get("/etkinlik/leave/:id", async function(req, res){
         console.log(err);
     }
 });
+
+router.get("/etkinlik/leave2/:id", async function(req, res){
+    
+    try{
+        const id = req.params.id;
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const kullanici_id = decoded.id;
+
+        const [olusturduklarim_onaysiz,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [kullanici_id, 0]);
+        const [olusturduklarim_onayli,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [kullanici_id, 1]);
+
+        const [katiliyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?)", [kullanici_id]);
+
+        const [katilmiyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?)", [kullanici_id]);
+
+        const [kategori,] = await db.execute("SELECT * FROM ilgialanlari");
+
+        //etkinlik var mi
+
+        const [etkinlik,] = await db.execute("select * from etkinlikler where idetkinlikler = ?", [id]);
+
+        if(etkinlik.length === 0)
+        {
+            return res.render("user/etkinlikler", {
+                title: "Etkinliklerim",
+                kategori: kategori,
+                olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+                olusturduklarim_onayli: olusturduklarim_onayli,
+                katiliyorum: katiliyorum,
+                katilmiyorum: katilmiyorum,
+                message: '',
+                alert_type: '',
+                message2: '',
+                alert_type2: '',
+                message3: 'Etkinlik Bulunamadı!',
+                alert_type3: 'alert-danger',
+                message4: '',
+                alert_type4: '',
+    
+            });
+        }
+
+
+        //katilimci var mi
+        const [katilimci_kontrol,] = await db.execute("select * from katilimcilar where idkullaniciR = ? AND idetkinlikR = ?", [kullanici_id, id]);
+        if(katilimci_kontrol === 0)
+        {
+            return res.render("user/etkinlikler", {
+                title: "Etkinliklerim",
+                kategori: kategori,
+                olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+                olusturduklarim_onayli: olusturduklarim_onayli,
+                katiliyorum: katiliyorum,
+                katilmiyorum: katilmiyorum,
+                message: '',
+                alert_type: '',
+                message2: '',
+                alert_type2: '',
+                message3: '',
+                alert_type3: '',
+                message4: 'Zaten katılımcı etkinlikte değil!',
+                alert_type4: 'alert-danger',
+    
+            });
+        }
+
+        await db.execute("DELETE from katilimcilar where idkullaniciR = ? AND idetkinlikR = ?", [kullanici_id, id]);
+
+        res.redirect(`/user/etkinlik/${id}`);
+
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+
 
 
 router.get("/etkinlik/delete/:id", async function(req, res){
@@ -1818,6 +1974,8 @@ router.get('/etkinlik/:id', async function(req, res){
         const [kurucu,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kontrol[0].olusturanidkullaniciR]);
         const [mesajlar,] = await db.execute("SELECT * FROM mesajlar WHERE idetkinlikR = ? ORDER BY tarih ASC", [etkinlikID]);
 
+        const [katilimci,] = await db.execute("SELECT katilimcilar.idkatilimcilar, katilimcilar.idkullaniciR, kullanıcılar.KullanıcıAdı FROM katilimcilar INNER JOIN kullanıcılar ON katilimcilar.idkullaniciR = kullanıcılar.idkullanıcılar WHERE katilimcilar.idetkinlikR = ?", [etkinlikID]);
+
         if(kontrol.length === 0)
         {
             return res.redirect('/admin/etkinlik');
@@ -1834,12 +1992,15 @@ router.get('/etkinlik/:id', async function(req, res){
             kurucu: kurucu[0],
             tarih: tarih,
             mesajlar: mesajlar,
+            katilimci: katilimci,
             kullanıcılar: kullanicilar,
             kullanici_id: id,
             message: '',
             alert_type: '',
             message2: '',
-            alert_type2: ''
+            alert_type2: '',
+            message3: '',
+            alert_type3: ''
         })
     }
     catch(err)
@@ -1865,6 +2026,7 @@ router.post("/send-message", async function(req, res)
     const [mesajlar,] = await db.execute("SELECT * FROM mesajlar WHERE idetkinlikR = ? ORDER BY tarih ASC", [eventId]);
     const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
 
+
     if(mesaj.length == 0)
     {
         return res.render('user/etkinlik_detay', {
@@ -1879,7 +2041,9 @@ router.post("/send-message", async function(req, res)
             message: '',
             alert_type: '',
             message2: 'Boş mesaj gönderemezsiniz',
-            alert_type2: 'alert-danger'
+            alert_type2: 'alert-danger',
+            message3: 'Boş mesaj gönderemezsiniz',
+            alert_type3: 'alert-danger'
         })
     }
     else if(kontrol.length == 0)
@@ -1889,7 +2053,61 @@ router.post("/send-message", async function(req, res)
 
     await db.execute("INSERT INTO mesajlar(idgonderen, idetkinlikR, mesaj, tarih) VALUES(?,?,?,?)", [kullanici_id, eventId, mesaj, moment().format('YYYY-MM-DD HH:mm:ss')]);
 
-    return res.redirect(`/user/etkinlik/${eventId}`);
+    return res.redirect(`/user/etkinlik/${eventId}#messageShow`);
+});
+
+router.get("/katilimci/delete/:id", async function(req, res){
+    try{
+        const katilimciid = req.params.id;
+
+        const [katilimcilar,] = await db.execute("SELECT * FROM katilimcilar WHERE idkatilimcilar = ?", [katilimciid]);
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [katilimci,] = await db.execute("SELECT katilimcilar.idkatilimcilar, katilimcilar.idetkinlikR, katilimcilar.idkullaniciR, kullanıcılar.KullanıcıAdı FROM katilimcilar INNER JOIN kullanıcılar ON katilimcilar.idkullaniciR = kullanıcılar.idkullanıcılar WHERE katilimcilar.idetkinlikR = ?", [katilimcilar[0].idetkinlikR]);
+        const [kategoriler,] = await db.execute("SELECT * FROM ilgialanlari");
+        const [kontrol,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler = ?", [katilimcilar[0].idetkinlikR]);
+        const [kurucu,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kontrol[0].olusturanidkullaniciR]);
+        const [mesajlar,] = await db.execute("SELECT * FROM mesajlar WHERE idetkinlikR = ? ORDER BY tarih ASC", [katilimcilar[0].idetkinlikR]);
+
+        if(kontrol.length === 0)
+        {
+            return res.redirect('/user/etkinlikler');
+        }
+    
+        const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
+        const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
+            
+
+        if(katilimcilar.length == 0)
+        {
+            return res.render('user/etkinlik_detay', {
+                title: 'Etkinlik Sayfasi',
+                etkinlik: kontrol[0],
+                kategoriler: kategoriler,
+                kurucu: kurucu[0],
+                tarih: tarih,
+                mesajlar: mesajlar,
+                kullanıcılar: kullanicilar,
+                katilimci: katilimci,
+                message: '',
+                alert_type: '',
+                message2: '',
+                alert_type2: '',
+                message3: 'Katılımcı bulunamadı.',
+                alert_type3: 'alert-danger'
+            })
+        }
+
+        await db.execute("DELETE FROM katilimcilar WHERE idkatilimcilar = ?", [katilimciid])
+
+        res.redirect(`/user/etkinlik/${katilimcilar[0].idetkinlikR}#katilimciShow`);
+
+    }
+    catch(err){
+        console.log(err);
+    }
 });
 
 router.get("/update_render/:id", async function(req, res)

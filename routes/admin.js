@@ -481,7 +481,7 @@ router.get("/katilimci/delete/:id", async function(req, res){
 
         await db.execute("DELETE FROM katilimcilar WHERE idkatilimcilar = ?", [katilimciid])
 
-        res.redirect(`/admin/etkinlik/${katilimcilar[0].idetkinlikR}`);
+        res.redirect(`/admin/etkinlik/${katilimcilar[0].idetkinlikR}#katilimciShow`);
 
     }
     catch(err){
@@ -571,7 +571,8 @@ router.post("/send-message", async function(req, res)
 
     await db.execute("INSERT INTO mesajlar(idgonderen, idetkinlikR, mesaj, tarih) VALUES(?,?,?,?)", [0, eventId, mesaj, moment().format('YYYY-MM-DD HH:mm:ss')]);
 
-    return res.redirect(`/admin/etkinlik/${eventId}`);
+    return res.redirect(`/admin/etkinlik/${eventId}#messageShow`);
+    
 });
 
 router.get("/interests", async function(req, res)

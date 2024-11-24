@@ -154,6 +154,12 @@
             margin-right: 10px;
         }
 
+        .panel-body .chats {
+            max-height: 500px; /* Maksimum yükseklik */
+            overflow-y: auto; /* Dikey kaydırma çubuğu */
+            padding-right: 10px; /* Kaydırma çubuğuna yapışmaması için sağ boşluk */
+        }
+
         .kaldir {
             position: absolute;
             top: 5px;
@@ -203,7 +209,7 @@
                         </div>
                         <div class="col-md-3 d-flex flex-column align-items-center justify-content-center">
                             <h5>Etkinlik Kurucusu: </h5>
-                            <% if (typeof kurucu !== 'undefined' && kurucu.length > 0 ) { %>
+                            <% if (typeof kurucu !== 'undefined') { %>
                                 <div class="card w-100 h-100 mb-3">
                                     <div class="d-flex align-items-center p-3">
                                         <img src="<%= kurucu.photoPath %>" alt="pp" class="img-fluid" style="max-width: 50px; height: 50px; margin-right: 10px;">
@@ -221,8 +227,13 @@
                         </div>
                         <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
                             <a class="btn btn-primary mb-2" href="/admin/etkinlik/update/<%= etkinlik.idetkinlikler %>">Düzenle</a>
-                            <a class="btn btn-success mb-2" href="/admin/etkinlik/approve/<%= etkinlik.idetkinlikler %>">Onayla</a>
-                            <a class="btn btn-danger" href="/admin/etkinlik/delete/<%= etkinlik.idetkinlikler %>">Reddet</a>
+
+                           <% if (etkinlik.durum == 0) { %>
+                                <a class="btn btn-success mb-2" href="/admin/etkinlik/approve/<%= etkinlik.idetkinlikler %>">Onayla</a>
+                                <a class="btn btn-danger" href="/admin/etkinlik/delete/<%= etkinlik.idetkinlikler %>">Reddet</a>
+                            <% } else { %>
+                                <a class="btn btn-danger" href="/admin/etkinlik/delete/<%= etkinlik.idetkinlikler %>">Sil</a>
+                            <% } %>
                         </div>
                         <div class="row mb-3">
                             <div class="col-sm-8">
@@ -252,6 +263,7 @@
     </div>
 
     <div class="katilimcilar">
+        <div id="katilimciShow"></div>
         <h2>KATILIMCILAR</h2>
         <% if (katilimci.length == 0) { %>
             <p>Katılımcı bulunmamaktadır.</p>
@@ -340,8 +352,9 @@
                   <input type="text" class="form-control" placeholder="Mesaj yazın" name="mesaj">
                   <input type="hidden" id="eventId" name="eventId" value="<%= etkinlik.idetkinlikler %>"> 
                   <span class="input-group-btn">
-                    <button class="btn btn-primary" type="submit">Send</button>
+                    <button class="btn btn-primary" type="submit">Gönder</button>
                   </span>
+                  <div id="messageShow"></div>
                 </div>
               </form>
             </div>
@@ -440,6 +453,22 @@
                 mapDiv.style.height = '0';
             }
         }
+    </script>
+
+    <script>
+        // Sohbet div'inin scroll'ını en alta ayarla
+        function scrollToBottom() {
+          const chatContainer = document.getElementsByClassName('chats')[0];
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+        }
+    
+        // Sayfa yüklendiğinde çalıştır
+        document.addEventListener('DOMContentLoaded', scrollToBottom);
+    
+        // Mesaj gönderildikten sonra otomatik çalışması için
+        window.onload = scrollToBottom;
     </script>
 </body>
 </html>
