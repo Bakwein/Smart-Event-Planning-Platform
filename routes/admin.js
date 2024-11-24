@@ -435,6 +435,60 @@ router.get('/etkinlik/delete/:id', async function(req, res){
     }
 });
 
+router.get("/katilimci/delete/:id", async function(req, res){
+    try{
+        const katilimciid = req.params.id;
+
+        const [katilimcilar,] = await db.execute("SELECT * FROM katilimcilar WHERE idkatilimcilar = ?", [katilimciid]);
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        const [katilimci,] = await db.execute("SELECT katilimcilar.idkatilimcilar, katilimcilar.idetkinlikR, katilimcilar.idkullaniciR, kullanıcılar.KullanıcıAdı FROM katilimcilar INNER JOIN kullanıcılar ON katilimcilar.idkullaniciR = kullanıcılar.idkullanıcılar WHERE katilimcilar.idetkinlikR = ?", [katilimcilar[0].idetkinlikR]);
+        const [kategoriler,] = await db.execute("SELECT * FROM ilgialanlari");
+        const [kontrol,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler = ?", [katilimcilar[0].idetkinlikR]);
+        const [kurucu,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kontrol[0].olusturanidkullaniciR]);
+        const [mesajlar,] = await db.execute("SELECT * FROM mesajlar WHERE idetkinlikR = ? ORDER BY tarih ASC", [katilimcilar[0].idetkinlikR]);
+
+        if(kontrol.length === 0)
+        {
+            return res.redirect('/admin/etkinlik');
+        }
+    
+        const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
+        const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
+            
+
+        if(katilimcilar.length == 0)
+        {
+            return res.render('admin/etkinlik_detay', {
+                title: 'Etkinlik Sayfasi',
+                etkinlik: kontrol[0],
+                kategoriler: kategoriler,
+                kurucu: kurucu[0],
+                tarih: tarih,
+                mesajlar: mesajlar,
+                kullanıcılar: kullanicilar,
+                katilimci: katilimci,
+                message: '',
+                alert_type: '',
+                message2: '',
+                alert_type2: '',
+                message3: 'Katılımcı bulunamadı.',
+                alert_type3: 'alert-danger'
+            })
+        }
+
+        await db.execute("DELETE FROM katilimcilar WHERE idkatilimcilar = ?", [katilimciid])
+
+        res.redirect(`/admin/etkinlik/${katilimcilar[0].idetkinlikR}`);
+
+    }
+    catch(err){
+        console.log(err);
+    }
+});
+
 router.get('/etkinlik/:id', async function(req, res){
     try{
         const etkinlikID = req.params.id;
@@ -448,6 +502,7 @@ router.get('/etkinlik/:id', async function(req, res){
 
         const [kurucu,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kontrol[0].olusturanidkullaniciR]);
         const [mesajlar,] = await db.execute("SELECT * FROM mesajlar WHERE idetkinlikR = ? ORDER BY tarih ASC", [etkinlikID]);
+        const [katilimci,] = await db.execute("SELECT katilimcilar.idkatilimcilar, katilimcilar.idkullaniciR, kullanıcılar.KullanıcıAdı FROM katilimcilar INNER JOIN kullanıcılar ON katilimcilar.idkullaniciR = kullanıcılar.idkullanıcılar WHERE katilimcilar.idetkinlikR = ?", [etkinlikID]);
 
         if(kontrol.length === 0)
         {
@@ -456,7 +511,6 @@ router.get('/etkinlik/:id', async function(req, res){
 
         const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
         const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
-        //console.log(kurucu[0], "xd");
         
         res.render('admin/etkinlik_detay', {
             title: 'Etkinlik Sayfasi',
@@ -466,10 +520,13 @@ router.get('/etkinlik/:id', async function(req, res){
             tarih: tarih,
             mesajlar: mesajlar,
             kullanıcılar: kullanicilar,
+            katilimci: katilimci,
             message: '',
             alert_type: '',
             message2: '',
-            alert_type2: ''
+            alert_type2: '',
+            message3: '',
+            alert_type3: ''
         })
     }
     catch(err)
@@ -502,7 +559,9 @@ router.post("/send-message", async function(req, res)
             message: '',
             alert_type: '',
             message2: 'Boş mesaj gönderemezsiniz',
-            alert_type2: 'alert-danger'
+            alert_type2: 'alert-danger',
+            message3: '',
+            alert_type3: ''
         })
     }
     else if(kontrol.length == 0)
