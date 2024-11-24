@@ -32,6 +32,11 @@
             overflow: hidden
         }
 
+        .chat-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
         .chat-body:first-child {
             margin-top: 0
         }
@@ -134,7 +139,7 @@
     </style>
 </head>
 <body>
-    <%- include('../partials/admin/nav') %>
+    <%- include('../partials/user/nav') %>
     <div class="container mt-3">
         <div class="container mt-3">
             <div class="row">
@@ -147,7 +152,7 @@
                         <div class="col-md-3">
                             <div class="card-body">
                                 <h4 class="card-name">
-                                    <a style="text-decoration: none; color: black" href="/admin/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
+                                    <a style="text-decoration: none; color: black" href="/user/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
                                 </h4>
                                 <p class="card-text"><%= etkinlik.aciklama %> </p>
                                 <p class="card-text"><strong>Kategori: </strong> <% kategoriler.forEach(kat => { %>
@@ -175,15 +180,13 @@
                                     </div>
                                 </div>
                             <% } else { %>
-                                <p>Admin tarafından oluşturuldu veya etkinlik kurucusu bulunamadı.</p>
+                                <p style="text-align: center;">Admin tarafından oluşturuldu veya etkinlik kurucusu bulunamadı.</p>
                             <% } %>
 
                             
                         </div>
                         <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
-                            <a class="btn btn-primary mb-2" href="/admin/etkinlik/update/<%= etkinlik.idetkinlikler %>">Düzenle</a>
-                            <a class="btn btn-success mb-2" href="/admin/etkinlik/approve/<%= etkinlik.idetkinlikler %>">Onayla</a>
-                            <a class="btn btn-danger" href="/admin/etkinlik/delete/<%= etkinlik.idetkinlikler %>">Reddet</a>
+                            <!-- katil/ ayril vs. eklenecek . sahibiyse düzenle de yapabilmeli-->
                         </div>
                         <div class="row mb-3">
                             <div class="col-sm-8">
@@ -224,16 +227,21 @@
             <div class="panel-body">
               <div class="chats">
                 <% mesajlar.forEach(mesaj => { %>
-                    <% const gönderenKullanıcı = kullanıcılar.find(kullanıcı => kullanıcı.id === mesaj.gönderen); %>
-                 <% if (mesaj.idgonderen == 0) { %>
+                    <% const gönderenKullanıcı = kullanıcılar.find(kullanıcı => kullanıcı.idkullanıcılar === mesaj.idgonderen); %>
+                 <% if (mesaj.idgonderen == kullanici_id) { %>
                     <div class="chat">
                         <div class="chat-avatar">
-                          <a class="avatar avatar-online" data-toggle="tooltip" href="#" data-placement="right" title="" data-original-title="Yonetici">
-                            <img src="/static/images/default_pp.png" alt="...">
+                          <a class="avatar avatar-online" data-toggle="tooltip" href="#" data-placement="right" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
+                            <img src="<%= gönderenKullanıcı ? gönderenKullanıcı.photoPath : '/static/images/default.jpg' %>" alt="Fotoğraf" width="50">
                           </a>
                         </div>
                         <div class="chat-body">
                           <div class="chat-content">
+                            <a href="/user/profile/<%= gönderenKullanıcı.idkullanıcılar %>" style="text-decoration: none; color: inherit;">
+                                <strong>
+                                    <%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>
+                                </strong>
+                            </a>
                             <p>
                               <%= mesaj.mesaj %>
                             </p>
@@ -248,36 +256,69 @@
                         </div>
                       </div>
                       <% } else { %>
-                        <div class="chat chat-left">
-                            <div class="chat-avatar">
-                              <a class="avatar avatar-online" data-toggle="tooltip" href="#" data-placement="left" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
-                                <img src="<%= gönderenKullanıcı ? gönderenKullanıcı.photoPath : '/static/images/default.jpg' %>" alt="Fotoğraf" width="50">
-                              </a>
-                            </div>
-                            <div class="chat-body">
-                              <div class="chat-content">
-                                <p><%= mesaj.mesaj %></p>
-                                <time class="chat-time" datetime="<%= mesaj.tarih %>">
-                                    <% 
-                                      const tarih = new Date(mesaj.tarih);
-                                      const saat = tarih.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-                                    %>
-                                    <%= saat %>
-                                  </time>
+                        <% if (mesaj.idgonderen == 0) { %>
+                            <div class="chat chat-left">
+                                <div class="chat-avatar">
+                                  <a class="avatar avatar-online" data-toggle="tooltip" href="#" data-placement="left" title="" data-original-title="Yönetici">
+                                    <img src="/static/images/default_pp.png" alt="...">
+                                  </a>
+                                </div>
+                                <div class="chat-body">
+                                  <div class="chat-content">
+                                    <strong>Yönetici</strong>
+                                    <p><%= mesaj.mesaj %></p>
+                                    <time class="chat-time" datetime="<%= mesaj.tarih %>">
+                                        <% 
+                                          const tarih = new Date(mesaj.tarih);
+                                          const saat = tarih.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+                                        %>
+                                        <%= saat %>
+                                      </time>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
+
+                        <% } else { %>
+                            <div class="chat chat-left">
+                                <div class="chat-avatar">
+                                  <a class="avatar avatar-online" data-toggle="tooltip" href="#" data-placement="left" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
+                                    <img src="<%= gönderenKullanıcı ? gönderenKullanıcı.photoPath : '/static/images/default.jpg' %>" alt="Fotoğraf" width="50">
+                                    
+                                  </a>
+                                </div>
+                                <div class="chat-body">
+                                    
+                                  <div class="chat-content">
+                                    <a href="/user/profile/<%= gönderenKullanıcı.idkullanıcılar %>"  style="text-decoration: none; color: inherit;">
+                                        <strong>
+                                            <%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>
+                                        </strong>
+                                    </a>
+                                    <p><%= mesaj.mesaj %></p>
+                                    <time class="chat-time" datetime="<%= mesaj.tarih %>">
+                                        <% 
+                                          const tarih = new Date(mesaj.tarih);
+                                          const saat = tarih.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+                                        %>
+                                        <%= saat %>
+                                      </time>
+                                  </div>
+                                </div>
+                              </div>
+                         
+                        <% } %>
+                        
                  <% } %>
                 <% }) %>
               </div>
             </div>
             <div class="panel-footer">
-              <form method="POST" action="/admin/send-message"> 
+              <form method="POST" action="/user/send-message"> 
                 <div class="input-group">
                   <input type="text" class="form-control" placeholder="Mesaj yazın" name="mesaj">
                   <input type="hidden" id="eventId" name="eventId" value="<%= etkinlik.idetkinlikler %>"> 
                   <span class="input-group-btn">
-                    <button class="btn btn-primary" type="submit">Send</button>
+                    <button class="btn btn-primary" type="submit">Gönder</button>
                   </span>
                 </div>
               </form>
@@ -369,6 +410,7 @@
     <script>
         function toggleMap() {
             const mapDiv = document.getElementById('map');
+
             if (mapDiv.style.visibility === 'hidden') {
                 mapDiv.style.visibility = 'visible';
                 mapDiv.style.height = '400px';  // Haritanın yüksekliğini burada belirleyin.

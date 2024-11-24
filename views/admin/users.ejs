@@ -67,7 +67,7 @@
                                     <% } %>  
                                 </td>
                                 <td>
-                                    <%= kul.konum %>   
+                                    <%= parseFloat(kul.konum.x).toFixed(2) %>.. - <%= parseFloat(kul.konum.y).toFixed(2) %>..
                                 </td>
                                 <td>
                                     <%= kul.dogumTarihi.getDate() %>-<%= (kul.dogumTarihi.getMonth() + 1) %>-<%= kul.dogumTarihi.getFullYear() %>  

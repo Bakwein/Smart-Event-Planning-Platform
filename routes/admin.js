@@ -10,6 +10,8 @@ const jwt = require('jsonwebtoken');
 const { title } = require("process");
 const moment = require('moment');
 
+const upload = require("../multer");
+
 function cookie_control(req, res)
 {
     if(req.cookies.token)
@@ -54,6 +56,105 @@ function you_have_cookie(req, res)
         })
     }
 }
+
+router.get("/create_etkinlik", async function(req, res){
+    cookie_control(req, res);
+
+    const [kategoriler, ] = await db.execute("select * from ilgialanlari");
+
+    res.render("admin/create_etkinlik", {
+        title: "Etkinlik Oluştur",
+        message: '',
+        alert_type: '',
+        kategoriler: kategoriler
+    });
+});
+
+router.post("/create_etkinlik", upload.single('etkinlikFoto'), async function(req, res){
+    cookie_control(req, res);
+    try{
+        //console.log(req.body);
+        const [kategoriler, ] = await db.execute("select * from ilgialanlari");
+        const {etkinlikFoto, etkinlikAdi, tarih, saat, etkinlikSuresi, kategori, aciklama, enlem, boylam} = req.body;
+
+        const etkinlikFotoPath = req.file ? "/static" + req.file.path.split('public')[1] : "/static/images/event.png";
+
+        //kontroller
+        if(etkinlikAdi.length > 255 || etkinlikAdi.length <= 0)
+        {
+            return res.render("admin/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Etkinlik adı 255 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(aciklama.length > 10000 || aciklama.length <= 0)
+        {
+            return res.render("admin/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Açıklama 10000 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(!kontroller.isValidDate(tarih))
+        {
+            return res.render("admin/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Tarih hatalı',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(!kontroller.isValidTime(saat))
+        {
+            return res.render("admin/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Saat hatalı',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(etkinlikSuresi <= 0)
+        {
+            return res.render("admin/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Etkinlik süresi 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+        else if(kategori === "0")
+        {
+            return res.render("admin/create_etkinlik", {
+                title: "Etkinlik Oluştur",
+                message: 'Kategori seçilmelidir',
+                alert_type: 'alert-danger',
+                kategoriler: kategoriler
+            });
+        }
+
+        await db.execute("INSERT INTO etkinlikler (etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, konum, kategori, durum, photoPath, olusturanidkullaniciR) VALUES (?, ?, ?, ?, ?, POINT(?, ?), ?, ?, ?, ?)", [etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, enlem, boylam, kategori, 0, etkinlikFotoPath, 0]);
+
+        
+
+        res.render("admin/create_etkinlik", {
+            title: "Etkinlik Oluştur",
+            message: 'Etkinlik başarıyla oluşturuldu',
+            alert_type: 'alert-success',
+            kategoriler: kategoriler
+        });
+
+
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+   
+});
+
 
 router.get("/etkinlik", async function(req, res)
 {
@@ -129,7 +230,7 @@ router.get("/etkinlik/update/:id", async function(req, res){
     });
 });
 
-const upload = require("../multer");
+
 
 router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async function(req, res){
     cookie_control(req, res);
@@ -286,8 +387,8 @@ router.get('/etkinlik/approve/:id', async function(req, res){
         }
 
         await db.execute('UPDATE etkinlikler SET durum = ? WHERE idetkinlikler = ?', [1, etkinlikID]);
-        const [kontrol2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1 AND idetkinlikler = ?', [etkinlikID]);
-        await db.execute('INSERT INTO katilimcilar(idkullaniciR, idetkinlikR) VALUES (?,?)', [kontrol2[0].olusturanidkullaniciR, etkinlikID]);
+        //const [kontrol2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1 AND idetkinlikler = ?', [etkinlikID]);
+        //await db.execute('INSERT INTO katilimcilar(idkullaniciR, idetkinlikR) VALUES (?,?)', [kontrol2[0].olusturanidkullaniciR, etkinlikID]);
 
         const [onayGereken2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 0');
         const [etkinlikler2,] = await db.execute('SELECT * FROM etkinlikler WHERE durum = 1');
@@ -344,6 +445,7 @@ router.get('/etkinlik/:id', async function(req, res){
 
         const [kategoriler,] = await db.execute("SELECT * FROM ilgialanlari");
         const [kontrol,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler = ?", [etkinlikID]);
+
         const [kurucu,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kontrol[0].olusturanidkullaniciR]);
         const [mesajlar,] = await db.execute("SELECT * FROM mesajlar WHERE idetkinlikR = ? ORDER BY tarih ASC", [etkinlikID]);
 
@@ -354,6 +456,7 @@ router.get('/etkinlik/:id', async function(req, res){
 
         const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
         const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
+        //console.log(kurucu[0], "xd");
         
         res.render('admin/etkinlik_detay', {
             title: 'Etkinlik Sayfasi',
@@ -485,7 +588,7 @@ router.post('/interests/interest/add', async function(req, res){
         }
         else if(ilgiAd.length > 0)
         {
-            if(ilgiAd[0].ilgiAlani == ilgiYeni)
+            if(ilgiAd[0].ilgiAlani.trim().toLowerCase() == ilgiYeni.trim().toLowerCase())
             {
                 return res.render('admin/interests', {
                     title: 'İlgiler',
