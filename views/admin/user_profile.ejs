@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <title>Profil</title>
+    <style>
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+        }
+    </style>
+    
+</head>
+<body>
+    <%- include('../partials/user/nav') %>
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <h3>Kullanıcı Profili</h3>
+            </div>
+            <div class="d-flex justify-content-center" style="margin-top: 40px;">
+                <div class="card" style="width: 20rem;">
+                    <img src=<%= photoPath %> class="card-img-top mx-auto" alt="user icon" style="width: 50%; height: auto;">
+                    <div class="card-body">
+                      <h4 class="card-title"><%= isim %> <%= soyisim %></h4>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Id :</strong> <%= idkullanıcılar %></li>
+                      <li class="list-group-item"><strong>Kullanıcı Adı :</strong> <%= KullanıcıAdı %></li>
+                      <li class="list-group-item"><strong>Doğum Tarihi :</strong> <%= dogumTarihi %></li>
+                      <li class="list-group-item"><strong>Cinsiyet :</strong> <% if (cinsiyet === '0') { %>
+                        Cinsiyet belirtilmemiş
+                    <% } else if (cinsiyet === '1') { %>
+                        Erkek
+                    <% } else if (cinsiyet === '2') { %>
+                        Kadın
+                    <% } %></li>
+                      <li class="list-group-item"><strong>E-posta :</strong> <%= email %></li>
+                      <li class="list-group-item"><strong>Telefon Numarası :</strong> <%= telefon %></li>
+                      <li class="list-group-item"><strong>Konum :</strong> <%= konum.x %> <%= konum.y %> </li>
+                      <!--
+                      <li class="list-group-item"><strong>İlgi Alanları :</strong> </li>
+                    -->
+                    </ul>
+                    <div class="card-body">
+                        <a href="/admin/user_update/<%= idkullanıcılar %>" class="btn btn-primary">Bilgilerini Güncelle</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>

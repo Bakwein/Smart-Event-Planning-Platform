@@ -225,6 +225,48 @@ async function create_mesajlar_table()
 }
 
 
+async function create_puan_table()
+{
+    try{
+        await db.execute(`CREATE TABLE IF NOT EXISTS puan (
+            idpuan int NOT NULL AUTO_INCREMENT,
+            idkullaniciR INT NOT NULL,
+            katilimPuani int NOT NULL,
+            olusturmaPuani int NOT NULL,
+            bonusPuan int NOT NULL,
+            PRIMARY KEY (idpuan),
+            KEY idkullaniciR_idx (idkullaniciR),
+            CONSTRAINT fk_kullanici3 FOREIGN KEY (idkullaniciR) REFERENCES kullanıcılar (idkullanıcılar) ON DELETE CASCADE ON UPDATE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;`);
+        console.log("puan table is created!");
+    }
+    catch(err)
+    {
+        console.log("puan table creation error: " + err);
+    }
+}
+
+async function craete_bildirim_table()
+{
+    try{
+        await db.execute(`CREATE TABLE IF NOT EXISTS bildirim (
+            idbildirim int NOT NULL AUTO_INCREMENT,
+            idkullaniciR INT NOT NULL,
+            bildirim text NOT NULL,
+            tarih datetime NOT NULL,
+            okunduMu int NOT NULL,
+            PRIMARY KEY (idbildirim),
+            KEY idkullaniciR_idx (idkullaniciR),
+            CONSTRAINT fk_kullanici4 FOREIGN KEY (idkullaniciR) REFERENCES kullanıcılar (idkullanıcılar) ON DELETE CASCADE ON UPDATE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;`);
+        console.log("bildirim table is created!");
+    }   
+    catch(err)
+    {
+        console.log("bildirim table creation error: " + err);
+    }
+}
+
 //tables
 create_admin_table();
 create_kontrol_table();
@@ -234,10 +276,12 @@ create_kullanici_ilgileri_table();
 create_etkinlik_table();
 create_katilimcilar_table();
 create_mesajlar_table();
+create_puan_table();
+craete_bildirim_table();
 
 //admin
-create_admin("admin", "admin");
-create_admin("admin2", "123");
+//create_admin("admin", "admin");
+//create_admin("admin2", "123");
 
 //one control row
 create_one_row_kontrol(1, 123456);

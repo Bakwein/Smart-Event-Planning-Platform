@@ -104,6 +104,7 @@ router.get("/ilgi_list", async function(req, res)
 });
 
 router.get('/ilgi_list/delete/:idilgiAlanlari', async function(req, res) {
+    cookie_control(req, res);
     try{
         const token = req.cookies.token;
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -126,6 +127,7 @@ router.get('/ilgi_list/delete/:idilgiAlanlari', async function(req, res) {
 });
 
 router.get('/ilgi_list/add/:idilgiAlanlari', async function(req, res) {
+    cookie_control(req, res);
     try{
         const token = req.cookies.token;
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -200,6 +202,8 @@ router.post('/profile_update', async function(req, res)
     try{
         const {idkullanıcılar,KullanıcıAdı, sifre, email, cinsiyet, enlem, boylam, isim, soyisim, dogumTarihi, telefon} = req.body;
 
+        const updatePassword = req.body.updatePassword === 'on';
+
         //kullanıcı kontrol ev photopath alma
         const [user_control,] = await db.execute("select * from kullanıcılar where idkullanıcılar = ?", [idkullanıcılar]);
         if(user_control === 0)
@@ -208,10 +212,11 @@ router.post('/profile_update', async function(req, res)
         }
 
         const photoPath = user_control[0].photoPath;
+        let hashedPassword = user_control[0].sifre;
         const konum = user_control[0].konum;
 
 
-        console.log(req.body);
+        //console.log(req.body);
         const tarih = new Date(dogumTarihi).toISOString().split('T')[0];
         //console.log(tarih);
         if(KullanıcıAdı.length > 50 || KullanıcıAdı.length <= 0)
@@ -524,28 +529,32 @@ router.post('/profile_update', async function(req, res)
             }
         }
 
-        if(!kontroller.sifreGecerliMi(sifre))
-        {
-            return res.render('user/profile_update', {
-                title: "Profil Güncelleme",
-                idkullanıcılar: idkullanıcılar,
-                KullanıcıAdı: KullanıcıAdı,
-                sifre: sifre,
-                email: email,
-                cinsiyet: cinsiyet,
-                konum: konum,
-                isim: isim,
-                soyisim: soyisim,
-                dogumTarihi: tarih,
-                telefon: telefon,
-                photoPath: photoPath,
-                message: 'Şifre en az bir harf ve bir sayı, bir özel karakter içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
-                alert_type: 'alert-danger'
-            });
-        }
+        if (updatePassword) {
+            const sifre = req.body.sifre;
 
-        const hashedPassword = await bcrypt.hash(sifre, 10);
-        console.log(photoPath,"yo!");
+            if(!kontroller.sifreGecerliMi(sifre))
+            {
+                return res.render('user/profile_update', {
+                    title: "Profil Güncelleme",
+                    idkullanıcılar: idkullanıcılar,
+                    KullanıcıAdı: KullanıcıAdı,
+                    sifre: sifre,
+                    email: email,
+                    cinsiyet: cinsiyet,
+                    konum: konum,
+                    isim: isim,
+                    soyisim: soyisim,
+                    dogumTarihi: tarih,
+                    telefon: telefon,
+                    photoPath: photoPath,
+                    message: 'Şifre en az bir harf ve bir sayı, bir özel karakter içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
+                    alert_type: 'alert-danger'
+                });
+            }
+            hashedPassword = await bcrypt.hash(sifre, 10);
+        }
+ 
+        //console.log(photoPath,"yo!");
         await db.execute('UPDATE kullanıcılar SET KullanıcıAdı = ?, sifre = ?, email = ?, cinsiyet = ?, konum = ST_PointFromText(?), isim = ?, soyisim = ?, dogumTarihi = ?, telefon = ?, photoPath = ? WHERE idkullanıcılar = ?', [KullanıcıAdı, hashedPassword, email, cinsiyet, `POINT(${enlem} ${boylam})`, isim, soyisim, dogumTarihi, telefon, photoPath, idkullanıcılar]);
         
 
@@ -1052,7 +1061,12 @@ router.post("/register", async function(req, res)
         //kullanici db'ye ekleme
         await db.execute(`INSERT INTO kullanıcılar (KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon, photoPath) VALUES (?, ?, ?, ?, POINT(?, ?), ?, ?, ?, ?, ?)`, [nick, hashedPassword, email, cinsiyet, enlem, boylam, isim, soyisim, dogumTarihi, telefon, "/static/images/default_pp.png"]);
 
-        const [users_varmi] = await db.execute('SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?', [nick]);
+        const [users_varmi,] = await db.execute('SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?', [nick]);
+
+        //puanlama db'ye ekleme
+        await db.execute(`INSERT INTO puan (idkullaniciR, katilimPuani, olusturmaPuani, bonusPuan) VALUES (?, ?, ?, ?)`, [users_varmi[0].idkullanıcılar, 0, 0, 20]);
+
+        
 
 
         //iliski ekleme
@@ -1336,6 +1350,16 @@ router.post("/create_etkinlik", upload.single('etkinlikFoto'), async function(re
 
         await db.execute("INSERT INTO etkinlikler (etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, konum, kategori, durum, photoPath, olusturanidkullaniciR) VALUES (?, ?, ?, ?, ?, POINT(?, ?), ?, ?, ?, ?)", [etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, enlem, boylam, kategori, 0, etkinlikFotoPath, id]);
 
+        //puan var mi
+        const [puan_varmi,] = await db.execute("select * from puan where idkullaniciR = ?", [id]);
+        if(puan_varmi.length === 0)
+        {
+            await db.execute(`INSERT INTO puan (idkullaniciR, katilimPuani, olusturmaPuani, bonusPuan) VALUES (?, ?, ?, ?)`, [id, 0, 0, 20]);
+        }
+
+        //kullaniciya puan ekle
+        await db.execute("UPDATE puan SET olusturmaPuani = olusturmaPuani + 15 WHERE idkullaniciR = ?", [id]);
+
         
 
         res.render("user/create_etkinlik", {
@@ -1396,7 +1420,7 @@ router.get("/etkinlikler", async function(req, res){
 });
 
 router.get("/etkinlik/join/:id", async function(req, res){
-    
+    cookie_control(req, res);
     try{
         const id = req.params.id;
 
@@ -1460,6 +1484,23 @@ router.get("/etkinlik/join/:id", async function(req, res){
         }
 
         await db.execute("INSERT INTO katilimcilar(idkullaniciR, idetkinlikR) VALUES (?, ?)", [kullanici_id, id]);
+
+        //puan 
+        /*
+        await db.execute(`INSERT INTO puan (idkullaniciR, katilimPuani, olusturmaPuani, bonusPuan) VALUES (?, ?, ?, ?)`, [users_varmi[0].idkullanıcılar, 0, 0, 0]);
+        */
+
+        //puan var mi
+        const [puan_varmi,] = await db.execute("select * from puan where idkullaniciR = ?", [kullanici_id]);
+        if(puan_varmi.length === 0)
+        {
+            await db.execute(`INSERT INTO puan (idkullaniciR, katilimPuani, olusturmaPuani, bonusPuan) VALUES (?, ?, ?, ?)`, [kullanici_id, 0, 0, 20]);
+        }
+
+        //etkinliğe katildi
+        await db.execute("UPDATE puan SET katilimPuani = katilimPuani + 10 WHERE idkullaniciR = ?", [kullanici_id]);
+
+        
 
         res.redirect("/user/etkinlikler")
 
@@ -1472,7 +1513,7 @@ router.get("/etkinlik/join/:id", async function(req, res){
 });
 
 router.get("/etkinlik/join2/:id", async function(req, res){
-    
+    cookie_control(req, res);
     try{
         const id = req.params.id;
 
@@ -1537,6 +1578,22 @@ router.get("/etkinlik/join2/:id", async function(req, res){
 
         await db.execute("INSERT INTO katilimcilar(idkullaniciR, idetkinlikR) VALUES (?, ?)", [kullanici_id, id]);
 
+        //puan 
+        /*
+        await db.execute(`INSERT INTO puan (idkullaniciR, katilimPuani, olusturmaPuani, bonusPuan) VALUES (?, ?, ?, ?)`, [users_varmi[0].idkullanıcılar, 0, 0, 0]);
+        */
+
+        //puan var mi
+        const [puan_varmi,] = await db.execute("select * from puan where idkullaniciR = ?", [kullanici_id]);
+        if(puan_varmi.length === 0)
+        {
+            await db.execute(`INSERT INTO puan (idkullaniciR, katilimPuani, olusturmaPuani, bonusPuan) VALUES (?, ?, ?, ?)`, [kullanici_id, 0, 0, 20]);
+        }
+
+        //etkinliğe katildi
+        await db.execute("UPDATE puan SET katilimPuani = katilimPuani + 10 WHERE idkullaniciR = ?", [kullanici_id]);
+
+
         res.redirect(`/user/etkinlik/${id}`)
 
         
@@ -1547,9 +1604,47 @@ router.get("/etkinlik/join2/:id", async function(req, res){
     }
 });
 
+router.get('/profile/:profileid', async function(req, res)
+{
+    try{
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+        const profileid = req.params.profileid;
+        console.log(profileid);
+        const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [profileid]); 
+
+        if(results.length === 0)
+        {
+            res.redirect("/user/etkinlikler");
+        }
+        else
+        {
+            const tarih = new Date(results[0].dogumTarihi).toISOString().split('T')[0];
+            res.render("user/profile_user", {
+                title: "Profil",
+                idkullanıcılar: results[0].idkullanıcılar,
+                KullanıcıAdı: results[0].KullanıcıAdı,
+                sifre: results[0].sifre,
+                email: results[0].email,
+                cinsiyet: results[0].cinsiyet,
+                konum: results[0].konum,
+                isim: results[0].isim,
+                soyisim: results[0].soyisim,
+                dogumTarihi: tarih,
+                telefon: results[0].telefon,
+                photoPath: results[0].photoPath
+            });
+        }
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
 
 router.get("/etkinlik/leave/:id", async function(req, res){
-    
+    cookie_control(req, res);
     try{
         const id = req.params.id;
 
@@ -1627,7 +1722,7 @@ router.get("/etkinlik/leave/:id", async function(req, res){
 });
 
 router.get("/etkinlik/leave2/:id", async function(req, res){
-    
+    cookie_control(req, res);
     try{
         const id = req.params.id;
 
@@ -1708,6 +1803,7 @@ router.get("/etkinlik/leave2/:id", async function(req, res){
 
 
 router.get("/etkinlik/delete/:id", async function(req, res){
+    cookie_control(req, res);
     try{
         const id = req.params.id;
 
@@ -1785,6 +1881,7 @@ router.get("/etkinlik/delete/:id", async function(req, res){
 });
 
 router.get("/etkinlik/delete2/:id", async function(req, res){
+    cookie_control(req, res);
     try{
         const id = req.params.id;
 
@@ -1861,6 +1958,7 @@ router.get("/etkinlik/delete2/:id", async function(req, res){
 });
 
 router.get("/etkinlik/update/:id", async function(req, res){
+    cookie_control(req, res);
     try{
         const id = req.params.id;
 
@@ -1911,6 +2009,7 @@ router.get("/etkinlik/update/:id", async function(req, res){
 
 
 router.get("/etkinlik/update2/:id", async function(req, res){
+    cookie_control(req, res);
     try{
         const id = req.params.id;
 
@@ -1961,6 +2060,7 @@ router.get("/etkinlik/update2/:id", async function(req, res){
 
 
 router.get('/etkinlik/:id', async function(req, res){
+    cookie_control(req, res);
     try{
         const etkinlikID = req.params.id;
     
@@ -2011,7 +2111,7 @@ router.get('/etkinlik/:id', async function(req, res){
 
 router.post("/send-message", async function(req, res)
 {
-
+    cookie_control(req, res);
     const id = req.params.id;
 
     const token = req.cookies.token;
@@ -2057,6 +2157,7 @@ router.post("/send-message", async function(req, res)
 });
 
 router.get("/katilimci/delete/:id", async function(req, res){
+    cookie_control(req, res);
     try{
         const katilimciid = req.params.id;
 
@@ -2111,7 +2212,8 @@ router.get("/katilimci/delete/:id", async function(req, res){
 });
 
 router.get("/update_render/:id", async function(req, res)
-{
+{   
+    cookie_control(req, res);
     try{
         const etkinlik_id = req.params.id;
 
@@ -2138,6 +2240,7 @@ router.get("/update_render/:id", async function(req, res)
 
 router.post("/update_render/:id", async function(req ,res)
 {
+    cookie_control(req, res);
     try{
         const id = req.params.id;
         console.log(id);

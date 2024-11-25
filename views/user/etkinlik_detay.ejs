@@ -171,7 +171,11 @@
             cursor: pointer;
             width: 20px;
             height: 20px;
-            line-height: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            line-height: normal;
             margin-top: 8px;
             text-align: center;
             font-size: 12px;
@@ -311,7 +315,7 @@
                  <% if (mesaj.idgonderen == kullanici_id) { %>
                     <div class="chat">
                         <div class="chat-avatar">
-                          <a class="avatar avatar-online" data-toggle="tooltip" href="#" data-placement="right" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
+                          <a class="avatar avatar-online" data-toggle="tooltip" href="/user/profile" data-placement="right" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
                             <img src="<%= gönderenKullanıcı ? gönderenKullanıcı.photoPath : '/static/images/default.jpg' %>" alt="Fotoğraf" width="50">
                           </a>
                         </div>
@@ -339,7 +343,7 @@
                         <% if (mesaj.idgonderen == 0) { %>
                             <div class="chat chat-left">
                                 <div class="chat-avatar">
-                                  <a class="avatar avatar-online" data-toggle="tooltip" href="#" data-placement="left" title="" data-original-title="Yönetici">
+                                  <a class="avatar avatar-online" data-toggle="tooltip" data-placement="left" title="" data-original-title="Yönetici">
                                     <img src="/static/images/default_pp.png" alt="...">
                                   </a>
                                 </div>
@@ -361,7 +365,7 @@
                         <% } else { %>
                             <div class="chat chat-left">
                                 <div class="chat-avatar">
-                                  <a class="avatar avatar-online" data-toggle="tooltip" href="#" data-placement="left" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
+                                  <a class="avatar avatar-online" data-toggle="tooltip" href="/user/profile/<%= gönderenKullanıcı.idkullanıcılar %>" data-placement="left" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
                                     <img src="<%= gönderenKullanıcı ? gönderenKullanıcı.photoPath : '/static/images/default.jpg' %>" alt="Fotoğraf" width="50">
                                     
                                   </a>

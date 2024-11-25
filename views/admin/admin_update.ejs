@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+</head>
+<body>
+    <%- include('../partials/admin/nav') %>
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <h3>Admin Güncelle</h3>
+            </div>
+            <div class="col-md-12 mt-3">
+                <img id="userPhoto" src="/static/images/default_admin.png" class="card-img-top mx-auto" alt="user icon" style="width: 50%; height: auto; cursor: pointer;">
+                <input type="file" id="photoUpload" accept="image/*" style="display: none;">
+            </div>
+            <div class="col-md-12 mt-3">
+                <form method="post">
+                    <div class="row mb-3">
+                        <label for="id" class="col-sm-2 col-from-label">Id</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="idadmin" name="idadmin" readonly value="<%= admin.idadmin %>">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="KullanıcıAdı" class="col-sm-2 col-from-label">Kullanıcı Adı</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="kullaniciAdi" name="kullaniciAdi" value="<%= admin.kullaniciAdi %>">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="updatePassword" class="col-sm-2 col-from-label">Şifre Güncelle</label>
+                        <div class="col-sm-8">
+                            <input type="checkbox" id="updatePassword" name="updatePassword">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="sifre" class="col-sm-2 col-from-label">Şifre:</label>
+                        <div class="col-sm-8">
+                            <input type="password" class="form-control" id="sifre" name="sifre" disabled>
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-8 offset-sm-2">
+                            <button type="submit" class="btn btn-primary">Güncelle</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <% if (message && message.length > 0) { %>
+            <div class="row justify-content-center" style="margin-left: 90px;">
+                <div class="col-md-8">
+                    <div class="alert <%= alert_type %> row justify-content-center" role="alert">
+                        <%= message %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+
+    <script>
+        // Checkbox'a bağlı olarak şifre alanını etkinleştir
+        const updatePasswordCheckbox = document.getElementById('updatePassword');
+        const passwordInput = document.getElementById('sifre');
+        updatePasswordCheckbox.addEventListener('change', () => {
+            passwordInput.disabled = !updatePasswordCheckbox.checked;
+        });
+    </script>
+    
+</body>
+</html>

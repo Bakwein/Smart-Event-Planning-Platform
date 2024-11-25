@@ -359,7 +359,47 @@ router.post("/etkinlik/update/:id", upload.single('etkinlikFoto'), async functio
    
 });
 
+router.get('/user_profile/:profileid', async function(req, res)
+{
+    try{
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+        const profileid = req.params.profileid;
+        console.log(profileid);
+        const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [profileid]); 
+
+        if(results.length === 0)
+        {
+            res.redirect("/admin/etkinlik");
+        }
+        else
+        {
+            const tarih = new Date(results[0].dogumTarihi).toISOString().split('T')[0];
+            res.render("admin/user_profile", {
+                title: "Profil",
+                idkullanıcılar: results[0].idkullanıcılar,
+                KullanıcıAdı: results[0].KullanıcıAdı,
+                sifre: results[0].sifre,
+                email: results[0].email,
+                cinsiyet: results[0].cinsiyet,
+                konum: results[0].konum,
+                isim: results[0].isim,
+                soyisim: results[0].soyisim,
+                dogumTarihi: tarih,
+                telefon: results[0].telefon,
+                photoPath: results[0].photoPath
+            });
+        }
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
 router.get('/etkinlik/approve/:id', async function(req, res){
+    cookie_control(req, res);
     try{
         const etkinlikID = req.params.id;
 
@@ -412,6 +452,7 @@ router.get('/etkinlik/approve/:id', async function(req, res){
 });
 
 router.get('/etkinlik/delete/:id', async function(req, res){
+    cookie_control(req, res);
     try{
         const etkinlikID = req.params.id;
 
@@ -436,6 +477,7 @@ router.get('/etkinlik/delete/:id', async function(req, res){
 });
 
 router.get("/katilimci/delete/:id", async function(req, res){
+    cookie_control(req, res);
     try{
         const katilimciid = req.params.id;
 
@@ -490,6 +532,7 @@ router.get("/katilimci/delete/:id", async function(req, res){
 });
 
 router.get('/etkinlik/:id', async function(req, res){
+    cookie_control(req, res);
     try{
         const etkinlikID = req.params.id;
     
@@ -537,6 +580,7 @@ router.get('/etkinlik/:id', async function(req, res){
 
 router.post("/send-message", async function(req, res)
 {
+    cookie_control(req, res);
     console.log(req.body);
 
     const {mesaj,eventId} = req.body;
@@ -604,6 +648,7 @@ router.get("/interests", async function(req, res)
 });
 
 router.get('/interests/interest/delete/:id', async function(req, res){
+    cookie_control(req, res);
     try{
         const idilgi = req.params.id;
         const [iliskiler,] = await db.execute("SELECT * FROM ilgialanlari WHERE idilgiAlanlari = ?", [idilgi]);
@@ -623,6 +668,7 @@ router.get('/interests/interest/delete/:id', async function(req, res){
 });
 
 router.post('/interests/interest/add', async function(req, res){
+    cookie_control(req, res);
     try{
         const ilgiYeni = req.body.ilgiAlaniYeni;
 
@@ -682,6 +728,7 @@ router.post('/interests/interest/add', async function(req, res){
 });
 
 router.post('/interests/connection/add', async function(req, res){
+    cookie_control(req, res);
     try{
         const kullaniciID = req.body.selectedKullanici;
         const ilgiID = req.body.selectedIlgi;
@@ -731,6 +778,7 @@ router.post('/interests/connection/add', async function(req, res){
 });
 
 router.get('/interests/connection/delete/:id', async function(req, res){
+    cookie_control(req, res);
     try{
         const idiliski = req.params.id;
         const [iliskiler,] = await db.execute("SELECT * FROM kullanici_ilgileri WHERE idkullanici_ilgileri = ?", [idiliski]);
@@ -775,6 +823,7 @@ router.get("/users", async function(req, res)
 });
 
 router.get('/users/delete/:id', async function(req, res){
+    cookie_control(req, res);
     try{
         const idkullanıcılar = req.params.id;
         const [kullanici,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [idkullanıcılar]);
@@ -794,6 +843,7 @@ router.get('/users/delete/:id', async function(req, res){
 });
 
 router.get('/users/update/:id', async function(req, res){
+    cookie_control(req, res);
     try{
         const idkullanıcılar = req.params.id;
         const [kullanici,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [idkullanıcılar]);
@@ -811,6 +861,7 @@ router.get('/users/update/:id', async function(req, res){
 });
 
 router.get('/user_update/:id', async function(req, res){
+    cookie_control(req, res);
     try{
         const idkullanıcılar = req.params.id;
         const[kullanici,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [idkullanıcılar]);
@@ -846,8 +897,11 @@ router.get('/user_update/:id', async function(req, res){
 
 router.post('/user_update/:id', async function(req, res)
 {
+    cookie_control(req, res);
     try{
-        const {idkullanıcılar,KullanıcıAdı, sifre, email, cinsiyet, konum, isim, soyisim, dogumTarihi, telefon} = req.body;
+        const {idkullanıcılar,KullanıcıAdı, sifre, email, cinsiyet, enlem, boylam, isim, soyisim, dogumTarihi, telefon} = req.body;
+
+        const updatePassword = req.body.updatePassword === 'on';
 
         //kullanıcı kontrol ev photopath alma
         const [user_control,] = await db.execute("select * from kullanıcılar where idkullanıcılar = ?", [idkullanıcılar]);
@@ -857,6 +911,8 @@ router.post('/user_update/:id', async function(req, res)
         }
 
         const photoPath = user_control[0].photoPath;
+        let hashedPassword = user_control[0].sifre;
+        const konum = user_control[0].konum;
 
         if(KullanıcıAdı.length > 50 || KullanıcıAdı.length <= 0)
             {
@@ -1067,6 +1123,16 @@ router.post('/user_update/:id', async function(req, res)
                     alert_type: 'alert-danger'
                 });
             }
+            else if(!enlem || enlem ===  "" || enlem === undefined || boylam === "" || boylam === undefined) 
+            {
+                    return res.render("user/register", {
+                    title: "Kullanıcı Kayıt",
+                    kutu_baslik: 'Kullanıcı Kayıt',
+                    message: 'Konum bilgisi eksik',
+                    alert_type: 'alert-danger',
+                    kategoriler: kategoriler
+                });
+            }
             else if(kontroller.sayiDisindaKarakterVarMi(telefon))
             {
                 return res.render('admin/user_update', {
@@ -1157,30 +1223,36 @@ router.post('/user_update/:id', async function(req, res)
                     });
                 }
             }
+
+            if (updatePassword) {
+                const sifre = req.body.sifre;
+            
+                if(!kontroller.sifreGecerliMi(sifre))
+                {
+                    return res.render('admin/user_update', {
+                        title: "Profil Güncelleme",
+                        idkullanıcılar: idkullanıcılar,
+                        KullanıcıAdı: KullanıcıAdı,
+                        sifre: sifre,
+                        email: email,
+                        cinsiyet: cinsiyet,
+                        konum: konum,
+                        isim: isim,
+                        soyisim: soyisim,
+                        dogumTarihi: dogumTarihi,
+                        telefon: telefon,
+                        photoPath: photoPath,
+                        message: 'Şifre en az bir harf ve bir sayı, bir özel karakter içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
+                        alert_type: 'alert-danger'
+                    });
+                }
+
+            
     
-            if(!kontroller.sifreGecerliMi(sifre))
-            {
-                return res.render('admin/user_update', {
-                    title: "Profil Güncelleme",
-                    idkullanıcılar: idkullanıcılar,
-                    KullanıcıAdı: KullanıcıAdı,
-                    sifre: sifre,
-                    email: email,
-                    cinsiyet: cinsiyet,
-                    konum: konum,
-                    isim: isim,
-                    soyisim: soyisim,
-                    dogumTarihi: dogumTarihi,
-                    telefon: telefon,
-                    photoPath: photoPath,
-                    message: 'Şifre en az bir harf ve bir sayı, bir özel karakter içermelidir ve uzunluğu en az 8 karakter olmalıdır. Ayrıca şifrede boşluk da olmamalıdır.',
-                    alert_type: 'alert-danger'
-                });
-            }
+            hashedPassword = await bcrypt.hash(sifre, 10);
+        }
     
-            const hashedPassword = await bcrypt.hash(sifre, 10);
-    
-            await db.execute('UPDATE kullanıcılar SET KullanıcıAdı = ?, sifre = ?, email = ?, cinsiyet = ?, konum = ?, isim = ?, soyisim = ?, dogumTarihi = ?, telefon = ?, photoPath = ? WHERE idkullanıcılar = ?', [KullanıcıAdı, hashedPassword, email, cinsiyet, "konum", isim, soyisim, dogumTarihi, telefon, photoPath, idkullanıcılar]);
+            await db.execute('UPDATE kullanıcılar SET KullanıcıAdı = ?, sifre = ?, email = ?, cinsiyet = ?, konum = ST_PointFromText(?), isim = ?, soyisim = ?, dogumTarihi = ?, telefon = ?, photoPath = ? WHERE idkullanıcılar = ?', [KullanıcıAdı, hashedPassword, email, cinsiyet, `POINT(${enlem} ${boylam})`, isim, soyisim, dogumTarihi, telefon, photoPath, idkullanıcılar]);
             
     
             return res.render('admin/user_update', {
@@ -1197,7 +1269,7 @@ router.post('/user_update/:id', async function(req, res)
                 telefon: telefon,
                 photoPath: photoPath,
                 message: 'Bilgiler Güncellendi',
-                alert_type: 'alert-danger'
+                alert_type: 'alert-success'
             });
     }
     catch(err)
@@ -1206,14 +1278,99 @@ router.post('/user_update/:id', async function(req, res)
     }
 });
 
-router.use("/admin/profile", function(req, res)
+router.get("/profile", async function(req, res)
 {
-    cookie_control(req, res);
-    //res.send("profil");
-    res.render("admin/profile", {
-        title: "Profile"
-    });
+    try{
+        cookie_control(req, res);
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+        
+        const [admin,] = await db.execute("SELECT * FROM admin WHERE idadmin = ?", [id]);
+        
+        if(admin.length == 0)
+        {
+            res.redirect("/admin/logout");
+        }
+
+        res.render("admin/profile", {
+            title: "Profile",
+            admin: admin[0],
+            message: '',
+            alert_type: ''
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+    
 });
+
+router.get("/admin_update", async function(req, res){
+    try{
+        cookie_control(req, res);
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+        
+        const [admin,] = await db.execute("SELECT * FROM admin WHERE idadmin = ?", [id]);
+        
+        if(admin.length == 0)
+        {
+            res.redirect("/admin/logout");
+        }
+
+        res.render("admin/admin_update", {
+            title: "Profile",
+            admin: admin[0],
+            message: '',
+            alert_type: ''
+        });
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.post('/admin_update', async function(req, res) {
+    cookie_control(req, res);
+    try {
+        const { idadmin, kullaniciAdi } = req.body;
+
+        // Checkbox durumu
+        const updatePassword = req.body.updatePassword === 'on'; // Checkbox seçiliyse "on" döner
+        console.log(idadmin);
+        const [admin_control, ] = await db.execute("select * from admin where idadmin = ?", [idadmin]);
+        if (admin_control.length === 0) {
+            return res.redirect("/admin/logout");
+        }
+
+        let hashedPassword = admin_control[0].sifre; // Varsayılan olarak eski şifreyi kullan
+        if (updatePassword) {
+            const sifre = req.body.sifre;
+
+            hashedPassword = await bcrypt.hash(sifre, 10);
+        }
+
+        await db.execute(
+            'UPDATE admin SET kullaniciAdi = ?, sifre = ? WHERE idadmin = ?',
+            [kullaniciAdi, hashedPassword, idadmin]
+        );
+
+        const [admin, ] = await db.execute("select * from admin where idadmin = ?", [idadmin]);
+        return res.render('admin/admin_update', {
+            title: "Profil Güncelleme",
+            admin: admin[0],
+            message: 'Bilgiler Güncellendi',
+            alert_type: 'alert-success'
+        });
+    } catch (err) {
+        console.log(err);
+    }
+});
+
 
 router.get("/login_render", function(req, res)
 {
