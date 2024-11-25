@@ -237,8 +237,8 @@
                         </div>
                         <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
                             <% if (typeof kurucu !== 'undefined' && kurucu.idkullanıcılar == kullanici_id) { %>
-                                <a class="btn btn-primary mb-2" href="/admin/etkinlik/update/<%= etkinlik.idetkinlikler %>">Düzenle</a>
-                                <a class="btn btn-danger mb-2" href="/admin/etkinlik/delete/<%= etkinlik.idetkinlikler %>">Sil</a>
+                                <a class="btn btn-primary mb-2" href="/user/etkinlik/update/<%= etkinlik.idetkinlikler %>">Düzenle</a>
+                                <a class="btn btn-danger mb-2" href="/user/etkinlik/delete/<%= etkinlik.idetkinlikler %>">Sil</a>
                             <% } %>
                             <% const katilimciVarMi = katilimci.find(k => k.idkullaniciR === kullanici_id); %>
                             <% if (katilimciVarMi) { %>
@@ -316,12 +316,12 @@
                     <div class="chat">
                         <div class="chat-avatar">
                           <a class="avatar avatar-online" data-toggle="tooltip" href="/user/profile" data-placement="right" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
-                            <img src="<%= gönderenKullanıcı ? gönderenKullanıcı.photoPath : '/static/images/default.jpg' %>" alt="Fotoğraf" width="50">
+                            <img src="<%= gönderenKullanıcı ? gönderenKullanıcı.photoPath : '/static/images/default_pp.png' %>" alt="Fotoğraf" width="50">
                           </a>
                         </div>
                         <div class="chat-body">
                           <div class="chat-content">
-                            <a href="/user/profile/<%= gönderenKullanıcı.idkullanıcılar %>" style="text-decoration: none; color: inherit;">
+                            <a href="<%= gönderenKullanıcı ? '/user/profile/' + gönderenKullanıcı.idkullanıcılar : '#' %>" style="text-decoration: none; color: inherit;">
                                 <strong>
                                     <%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>
                                 </strong>
@@ -344,7 +344,7 @@
                             <div class="chat chat-left">
                                 <div class="chat-avatar">
                                   <a class="avatar avatar-online" data-toggle="tooltip" data-placement="left" title="" data-original-title="Yönetici">
-                                    <img src="/static/images/default_pp.png" alt="...">
+                                    <img src="/static/images/default_admin.png" alt="...">
                                   </a>
                                 </div>
                                 <div class="chat-body">
@@ -365,15 +365,15 @@
                         <% } else { %>
                             <div class="chat chat-left">
                                 <div class="chat-avatar">
-                                  <a class="avatar avatar-online" data-toggle="tooltip" href="/user/profile/<%= gönderenKullanıcı.idkullanıcılar %>" data-placement="left" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
-                                    <img src="<%= gönderenKullanıcı ? gönderenKullanıcı.photoPath : '/static/images/default.jpg' %>" alt="Fotoğraf" width="50">
+                                  <a class="avatar avatar-online" data-toggle="tooltip" href="<%= gönderenKullanıcı ? '/user/profile/' + gönderenKullanıcı.idkullanıcılar : '#' %>" data-placement="left" title="" data-original-title="<%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>">
+                                    <img src="<%= gönderenKullanıcı ? gönderenKullanıcı.photoPath : '/static/images/default_pp.png' %>" alt="Fotoğraf" width="50">
                                     
                                   </a>
                                 </div>
                                 <div class="chat-body">
                                     
                                   <div class="chat-content">
-                                    <a href="/user/profile/<%= gönderenKullanıcı.idkullanıcılar %>"  style="text-decoration: none; color: inherit;">
+                                    <a href="<%= gönderenKullanıcı ? '/user/profile/' + gönderenKullanıcı.idkullanıcılar : '#' %>"  style="text-decoration: none; color: inherit;">
                                         <strong>
                                             <%= gönderenKullanıcı ? gönderenKullanıcı.KullanıcıAdı : 'Bilinmeyen Kullanıcı' %>
                                         </strong>

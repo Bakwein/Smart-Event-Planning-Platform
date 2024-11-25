@@ -11,6 +11,20 @@
             height: 100vh;
             background: linear-gradient(to right, #f0f0f0, #b5fcd8);
         }
+
+        .card-title {
+            display: flex;
+            align-items: center; /* Dikey hizalama için */
+        }
+
+        .extra-info {
+            margin-left: 10px; /* Araya boşluk koyar */
+            background-color: #f0f0f0; /* Arka plan rengi */
+            padding: 5px 10px; /* İçerik boşluğu */
+            border-radius: 5px; /* Kenarları yuvarlatır */
+            font-size: 0.9em; /* Yazı boyutunu küçültür */
+            color: #333; /* Yazı rengi */
+        }
     </style>
     
 </head>
@@ -26,6 +40,11 @@
                     <img src=<%= photoPath %> class="card-img-top mx-auto" alt="user icon" style="width: 50%; height: auto;">
                     <div class="card-body">
                       <h4 class="card-title"><%= isim %> <%= soyisim %></h4>
+                      <% if (puan) { %>
+                        <span class="extra-info">Puan: <%= puan.katilimPuani + puan.olusturmaPuani + puan.bonusPuan %></span>
+                        <% } else { %>
+                        <span class="extra-info">Puan: 20</span>
+                      <% } %>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item"><strong>Id :</strong> <%= idkullanıcılar %></li>

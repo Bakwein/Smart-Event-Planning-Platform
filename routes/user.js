@@ -159,6 +159,7 @@ router.get("/profile", async function(req, res)
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         const id = decoded.id;
         const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [id]); 
+        const [puan,] = await db.execute("SELECT * FROM puan WHERE idkullaniciR = ?", [id]);
 
         if(results.length === 0)
         {
@@ -166,7 +167,7 @@ router.get("/profile", async function(req, res)
         }
         else
         {
-            const tarih = new Date(results[0].dogumTarihi).toISOString().split('T')[0];
+            const tarih = moment(results[0].dogumTarihi).format('YYYY-MM-DD');
             res.render("user/profile", {
                 title: "Profil",
                 idkullanıcılar: results[0].idkullanıcılar,
@@ -175,6 +176,7 @@ router.get("/profile", async function(req, res)
                 email: results[0].email,
                 cinsiyet: results[0].cinsiyet,
                 konum: results[0].konum,
+                puan: puan[0],
                 isim: results[0].isim,
                 soyisim: results[0].soyisim,
                 dogumTarihi: tarih,
@@ -217,7 +219,7 @@ router.post('/profile_update', async function(req, res)
 
 
         //console.log(req.body);
-        const tarih = new Date(dogumTarihi).toISOString().split('T')[0];
+        const tarih = moment(dogumTarihi).format('YYYY-MM-DD');
         //console.log(tarih);
         if(KullanıcıAdı.length > 50 || KullanıcıAdı.length <= 0)
         {
@@ -598,7 +600,7 @@ router.get('/profile_update', async function(req,res){
         const name_ = res_first[0].KullanıcıAdı;
         
         const [results,] = await db.execute("SELECT * FROM kullanıcılar WHERE KullanıcıAdı = ?", [name_]);
-        const tarih = new Date(results[0].dogumTarihi).toISOString().split('T')[0];
+        const tarih = moment(results[0].dogumTarihi).format('YYYY-MM-DD');
         console.log(tarih);
         res.render('user/profile_update', {
             title: "Profil",
@@ -1620,7 +1622,7 @@ router.get('/profile/:profileid', async function(req, res)
         }
         else
         {
-            const tarih = new Date(results[0].dogumTarihi).toISOString().split('T')[0];
+            const tarih = moment(results[0].dogumTarihi).format('YYYY-MM-DD');
             res.render("user/profile_user", {
                 title: "Profil",
                 idkullanıcılar: results[0].idkullanıcılar,
@@ -2082,7 +2084,7 @@ router.get('/etkinlik/:id', async function(req, res){
         }
 
         const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
-        const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
+        const tarih = moment(kontrol[0].tarih).format('YYYY-MM-DD');
         //console.log(kurucu[0], "xd");
         
         res.render('user/etkinlik_detay', {
@@ -2178,7 +2180,7 @@ router.get("/katilimci/delete/:id", async function(req, res){
         }
     
         const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
-        const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
+        const tarih = moment(kontrol[0].tarih).format('YYYY-MM-DD');
             
 
         if(katilimcilar.length == 0)

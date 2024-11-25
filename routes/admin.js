@@ -210,7 +210,7 @@ router.get("/etkinlik/update/:id", async function(req, res){
         });
     }
 
-    const tarih = new Date(etkinlik[0].tarih).toISOString().split('T')[0];
+    const tarih = moment(etkinlik[0].tarih).format('YYYY-MM-DD');
 
     res.render("admin/update_etkinlik", {
         title: "Etkinlik Düzenle",
@@ -368,6 +368,7 @@ router.get('/user_profile/:profileid', async function(req, res)
         const profileid = req.params.profileid;
         console.log(profileid);
         const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [profileid]); 
+        const [puan,] = await db.execute("SELECT * FROM puan WHERE idkullaniciR = ?", [profileid]);
 
         if(results.length === 0)
         {
@@ -375,7 +376,7 @@ router.get('/user_profile/:profileid', async function(req, res)
         }
         else
         {
-            const tarih = new Date(results[0].dogumTarihi).toISOString().split('T')[0];
+            const tarih = moment(results[0].dogumTarihi).format('YYYY-MM-DD');
             res.render("admin/user_profile", {
                 title: "Profil",
                 idkullanıcılar: results[0].idkullanıcılar,
@@ -385,6 +386,7 @@ router.get('/user_profile/:profileid', async function(req, res)
                 cinsiyet: results[0].cinsiyet,
                 konum: results[0].konum,
                 isim: results[0].isim,
+                puan: puan[0],
                 soyisim: results[0].soyisim,
                 dogumTarihi: tarih,
                 telefon: results[0].telefon,
@@ -498,8 +500,7 @@ router.get("/katilimci/delete/:id", async function(req, res){
         }
     
         const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
-        const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
-            
+        const tarih = moment(kontrol[0].tarih).format('YYYY-MM-DD');
 
         if(katilimcilar.length == 0)
         {
@@ -553,7 +554,7 @@ router.get('/etkinlik/:id', async function(req, res){
         }
 
         const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
-        const tarih = new Date(kontrol[0].tarih).toISOString().split('T')[0];
+        const tarih = moment(kontrol[0].tarih).format('YYYY-MM-DD');
         
         res.render('admin/etkinlik_detay', {
             title: 'Etkinlik Sayfasi',
@@ -870,7 +871,7 @@ router.get('/user_update/:id', async function(req, res){
             return res.redirect('/admin/users');
         }
 
-        const tarih = new Date(kullanici[0].dogumTarihi).toISOString().split('T')[0];
+        const tarih = moment(kullanici[0].dogumTarihi).format('YYYY-MM-DD');
 
         res.render('admin/user_update', {
             title: "Kullanıcı Düzenleme",
