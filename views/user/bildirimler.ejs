@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <style>
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/user/nav') %>
+    
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <h3>Bildirimler</h3>
+            </div>
+            <div class="col-md-12 mt-3">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Bildirim</th>
+                            <th>Tarih</th>
+                            <th style="width:130px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (bildirimler.length === 0) { %>
+                            <tr>
+                                <td colspan="4">Bildirim bulunamadı.</td>
+                            </tr>
+                            
+                        <% } else { %>
+                            <% bildirimler.forEach(bildirim => { %>
+                                <tr>
+                                    <td>
+                                        <%= bildirim.bildirim %>
+                                    </td>
+                                    <td>
+                                        <%= bildirim.tarih.getDate() %>-<%= (bildirim.tarih.getMonth() + 1) %>-<%= bildirim.tarih.getFullYear() %> <%= bildirim.tarih.getHours() %>:<%= bildirim.tarih.getMinutes() %>:<%= bildirim.tarih.getSeconds() %>
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-sm btn-danger" href="/user/notifications/<%=bildirim.idbildirim%>">Onayla</a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <% if (message && message.length > 0) { %>
+            <div class="row justify-content-center" style="margin-left: 90px;">
+                <div class="col-md-8">
+                    <div class="alert <%= alert_type %> row justify-content-center" role="alert">
+                        <%= message %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

@@ -14,7 +14,7 @@ router.get("/", function(req, res){
         {
             if(err)
             {
-                res.redirect("/user/login_render");
+                return res.redirect("/user/login_render");
             }
             else
             {
@@ -27,10 +27,11 @@ router.get("/", function(req, res){
                 {
                     return res.redirect('/admin/home_render');
                 }
+                return res.redirect("/user/login_render");
             }
         });
     }
-    res.redirect("/user/login_render");
+    
 })
 
 

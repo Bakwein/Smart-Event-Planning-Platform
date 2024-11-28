@@ -1485,7 +1485,43 @@ router.get("/etkinlik/join/:id", async function(req, res){
             });
         }
 
+       
+
+        //etlinklik baslangic bitis
+        const baslangic = moment(etkinlik[0].tarih);
+        const bitis = moment(etkinlik[0].tarih).add(etkinlik[0].etkinlikSuresi, 'minutes');
+
+        //cakisma var mi
+        const [bu_haric_tum_etkinlikler,] = await db.execute("select * from etkinlikler where idetkinlikler != ?", [id]);
+        for(let i = 0; i < bu_haric_tum_etkinlikler.length; i++)
+        {
+            const baslangic2 = moment(bu_haric_tum_etkinlikler[i].tarih);
+            const bitis2 = moment(bu_haric_tum_etkinlikler[i].tarih).add(bu_haric_tum_etkinlikler[i].etkinlikSuresi, 'minutes');
+
+            if(baslangic.isBetween(baslangic2, bitis2) || bitis.isBetween(baslangic2, bitis2))
+            {
+                return res.render("user/etkinlikler", {
+                    title: "Etkinliklerim",
+                    kategori: kategori,
+                    olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+                    olusturduklarim_onayli: olusturduklarim_onayli,
+                    katiliyorum: katiliyorum,
+                    katilmiyorum: katilmiyorum,
+                    message: '',
+                    alert_type: '',
+                    message2: '',
+                    alert_type2: '',
+                    message3: '',
+                    alert_type3: '',
+                    message4: 'Etkinlik başka bir etkinlikle çakışıyor!',
+                    alert_type4: 'alert-danger',
+        
+                });
+            }
+        }
+
         await db.execute("INSERT INTO katilimcilar(idkullaniciR, idetkinlikR) VALUES (?, ?)", [kullanici_id, id]);
+
 
         //puan 
         /*
@@ -1577,6 +1613,40 @@ router.get("/etkinlik/join2/:id", async function(req, res){
     
             });
         }
+
+        //etlinklik baslangic bitis
+        const baslangic = moment(etkinlik[0].tarih);
+        const bitis = moment(etkinlik[0].tarih).add(etkinlik[0].etkinlikSuresi, 'minutes');
+
+        //cakisma var mi
+        const [bu_haric_tum_etkinlikler,] = await db.execute("select * from etkinlikler where idetkinlikler != ?", [id]);
+        for(let i = 0; i < bu_haric_tum_etkinlikler.length; i++)
+        {
+            const baslangic2 = moment(bu_haric_tum_etkinlikler[i].tarih);
+            const bitis2 = moment(bu_haric_tum_etkinlikler[i].tarih).add(bu_haric_tum_etkinlikler[i].etkinlikSuresi, 'minutes');
+
+            if(baslangic.isBetween(baslangic2, bitis2) || bitis.isBetween(baslangic2, bitis2))
+            {
+                return res.render("user/etkinlikler", {
+                    title: "Etkinliklerim",
+                    kategori: kategori,
+                    olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+                    olusturduklarim_onayli: olusturduklarim_onayli,
+                    katiliyorum: katiliyorum,
+                    katilmiyorum: katilmiyorum,
+                    message: '',
+                    alert_type: '',
+                    message2: '',
+                    alert_type2: '',
+                    message3: '',
+                    alert_type3: '',
+                    message4: 'Etkinlik başka bir etkinlikle çakışıyor!',
+                    alert_type4: 'alert-danger',
+        
+                });
+            }
+        }
+
 
         await db.execute("INSERT INTO katilimcilar(idkullaniciR, idetkinlikR) VALUES (?, ?)", [kullanici_id, id]);
 
@@ -2114,7 +2184,7 @@ router.get('/etkinlik/:id', async function(req, res){
 router.post("/send-message", async function(req, res)
 {
     cookie_control(req, res);
-    const id = req.params.id;
+    //const id = req.params.id;
 
     const token = req.cookies.token;
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -2127,6 +2197,9 @@ router.post("/send-message", async function(req, res)
     const [kurucu,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kontrol[0].olusturanidkullaniciR]);
     const [mesajlar,] = await db.execute("SELECT * FROM mesajlar WHERE idetkinlikR = ? ORDER BY tarih ASC", [eventId]);
     const [kullanicilar,] = await db.execute("SELECT * FROM kullanıcılar");
+
+    
+
 
 
     if(mesaj.length == 0)
@@ -2154,6 +2227,24 @@ router.post("/send-message", async function(req, res)
     }
 
     await db.execute("INSERT INTO mesajlar(idgonderen, idetkinlikR, mesaj, tarih) VALUES(?,?,?,?)", [kullanici_id, eventId, mesaj, moment().format('YYYY-MM-DD HH:mm:ss')]);
+
+    // katilimcilara bildirim gonder
+    //etkinlik ismini al
+    const [etkinlik_adi,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler = ?", [eventId]);
+    const etkinlik_ismi = etkinlik_adi[0].etkinlikAdi;
+
+    //kullanici ismi
+    const [kullanici_adi,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [kullanici_id]);
+    const kullanici_adi_ = kullanici_adi[0].KullanıcıAdı;
+
+    const [katilimcilar,] = await db.execute("SELECT * FROM katilimcilar WHERE idetkinlikR = ?", [eventId]);
+    for(let i = 0; i < katilimcilar.length; i++)
+    {
+        if(katilimcilar[i].idkullaniciR != kullanici_id)
+        {
+            await db.execute("INSERT INTO bildirim(idkullaniciR, bildirim, tarih, okunduMu) VALUES(?,?,?,?)", [katilimcilar[i].idkullaniciR, etkinlik_ismi.toUpperCase() +' etkinliğinde yeni mesaj -> '+kullanici_adi_ + ": " + mesaj , moment().format('YYYY-MM-DD HH:mm:ss'), 0]);
+        }
+    }
 
     return res.redirect(`/user/etkinlik/${eventId}#messageShow`);
 });
@@ -2247,6 +2338,57 @@ router.post("/update_render/:id", async function(req ,res)
         const id = req.params.id;
         console.log(id);
         console.log(req.body);
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
+router.get("/notifications/:id", async function(req, res){
+    cookie_control(req, res);
+    const bildirim_id = req.params.id;
+
+    //bildirim var mi
+    const [bildirim,] = await db.execute("SELECT * FROM bildirim WHERE idbildirim = ?", [bildirim_id]);
+
+    if(bildirim.length === 0)
+    {
+        return res.redirect("/user/notifications");
+    }
+
+    //bildirimi sil
+    await db.execute("DELETE FROM bildirim WHERE idbildirim = ?", [bildirim_id]);
+
+    res.redirect("/user/notifications");
+});
+
+
+router.get("/notifications", async function(req, res){
+    cookie_control(req, res);
+    try{
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const id = decoded.id;
+
+        // id kontrol
+        const [users_varmi,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [id]);
+        if(users_varmi.length === 0)
+        {
+            return res.redirect("/user/logout");
+        }
+
+        const [bildirimler,] = await db.execute("SELECT * FROM bildirim WHERE idkullaniciR = ? ORDER BY tarih DESC", [id]);
+        //kullanici
+        const [kullanici,] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [id]);
+
+        res.render("user/bildirimler", {
+            title: "Bildirimler",
+            bildirimler: bildirimler,
+            kullanici: kullanici[0],
+            message: '',
+            alert_type: ''
+        });
     }
     catch(err)
     {

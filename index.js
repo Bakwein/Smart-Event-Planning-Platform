@@ -17,14 +17,84 @@ const adminRoutes = require("./routes/admin");
 const loginRoutes = require("./routes/login");
 
 const db = require("./data/db");
+const jwt = require('jsonwebtoken');
 
 app.use("/libs", express.static(path.join(__dirname,"node_modules")));
 app.use("/static", express.static(path.join(__dirname,"public")));
 
+app.use(async (req, res, next) => {
+    const skipRoutes = [
+        '/user/ilgi_list',
+        '/user/profile',
+        '/user/index',
+        '/user/home',
+        '/user/create_etkinlik',
+        '/user/etkinlikler',
+        '/user/etkinlik',
+        '/user/send-message',
+        '/user/katilimci',
+        '/user/update_render',
+        '/user/notifications',
+        '/user/logout',
+        '/static',
+        '/'
+    ]; // bu yeni bir şey eklendiğinde güncellenmeli yoksa bildirim kısmı arıza olur
+    
+    if (!skipRoutes.some(route => req.path.includes(route))) {
+        console.log("Atlanıyor:", req.path);
+        return next();
+    }
+
+    const token = req.cookies.token;
+
+    if (!token) {
+        console.log("token yok");
+        console.log(req.path);
+        return res.redirect("/user/login");
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+        // Admin rolü kontrolü
+        if (decoded.rol === "admin") {
+            res.locals.unreadNotifications = 0;
+            return next(); // Admin için next çağrısı
+        }
+
+        const id = decoded.id;
+
+        // Kullanıcı kontrolü
+        const [user] = await db.execute(
+            "SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?",
+            [id]
+        );
+
+        if (user.length === 0) {
+            return res.redirect("/user/logout");
+        }
+
+        const kullanici_id = user[0].idkullanıcılar;
+        const [rows] = await db.execute(
+            "SELECT COUNT(*) AS unreadNotifications FROM bildirim WHERE idkullaniciR = ? AND okunduMu = 0",
+            [kullanici_id]
+        );
+
+        res.locals.unreadNotifications = rows[0].unreadNotifications || 0;
+    } catch (error) {
+        console.error("JWT doğrulama hatası:", error);
+        return res.redirect("/user/login");
+    }
+    //console.log(res.locals.unreadNotifications);
+    next();
+});
+
+
 //routes
+app.use(loginRoutes);
 app.use("/admin", adminRoutes);
 app.use("/user", userRoutes);
-app.use(loginRoutes);
+
 
 //upload
 const upload = require("./multer");
@@ -73,6 +143,24 @@ app.post("/upload_photo2", upload.single('photo'), async function(req, res){
         console.log(err);
     }
 });
+
+app.post("/notifications/read", async (req, res) => {
+    const token = req.cookies.token;
+    if(!token){
+        return res.redirect("/user/login");
+    }
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const id = decoded.id;
+    const [user, ] = await db.execute("SELECT * FROM kullanıcılar WHERE idkullanıcılar = ?", [id]);
+    if(user.length == 0){
+        return res.redirect("/user/logout");
+    }
+    const kullanici_id = user[0].idkullanıcılar;
+    await db.execute("UPDATE bildirim SET okunduMu = 1 WHERE idkullaniciR = ?", [kullanici_id]);
+    res.json({ success: true });
+});
+
+
 
 //just upload the storage and return path
 /*

@@ -2,6 +2,17 @@
     <div class="container">
         <a href="/" class="navbar-brand">Name</a>
         <ul class="navbar-nav nav-right">
+            <li class="nav-item position-relative">
+                <a href="#" class="nav-link" id="notificationLink">
+                    Bildirimler
+                    <span class="badge bg-danger <%= unreadNotifications > 0 ? '' : 'd-none' %>" id="notificationBadge">
+                        <%= unreadNotifications %>
+                    </span>
+                    
+                </a>
+            </li>
+        </ul>
+        <ul class="navbar-nav nav-right">
             <li class="nav-item">
                 <a href="/user/create_etkinlik" class="nav-link">Etkinlik Oluştur</a>
             </li>
