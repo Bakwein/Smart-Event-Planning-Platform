@@ -419,6 +419,26 @@
             </div>
         <% } %>
         </div>
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <h3>Rota Planlama</h3>
+                <button type="button" style="margin-top: 15px;" onclick="butForCar()" class="btn btn-primary mb-2">Araç İçin Rota</button>
+                <button type="button" style="margin-top: 15px;" onclick="butForCycling()" class="btn btn-primary mb-2">Bisiklet İçin Rota</button>
+                <button type="button" style="margin-top: 15px;" onclick="butForWalk()" class="btn btn-primary mb-2">Yürüyüş İçin Rota</button>
+                <div id="map_rota" style="height: 400px; margin-top: 20px;"></div>
+                <input type="hidden" id="enlem_etkinlik_rota" name="enlem_etkinlik_rota" value="<%= etkinlik.konum.x %>">
+                <input type="hidden" id="boylam_etkinlik_rota" name="boylam_etkinlik_rota" value="<%= etkinlik.konum.y %>">
+            </div>
+        </div>
+        <% if (message4 && message4.length > 0) { %>
+            <div class="row justify-content-center" style="margin-left: 90px;">
+                <div class="col-md-8">
+                    <div class="alert <%= alert_type4 %> row justify-content-center" role="alert">
+                        <%= message4 %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
     </div>
     
 
@@ -435,35 +455,7 @@
 
     }
 
-    //foto değiştiğinde
-    /*
-    document.getElementById('etkinlikFoto').addEventListener('change', function(e){
-        const file = e.target.files[0];
-        if(file)
-        {
-            const formData = new FormData();
-            formData.append('photo', file);
-            fetch('/upload_photo3', {
-                method: 'POST',
-                body: formData
-            }).then(response => {
-                if(response.redirected){
-                    window.location.href = response.url;
-                }else{
-                    return response.json();
-                }
-            })
-            .then(data => {
-                if(data && data.photoPath){
-                    document.getElementById('eventPhotoPreview').src = data.photoPath;
-                }
-            })
-            .catch(err => {
-                console.error(err);
-            });
-        }
-    });
-       */
+   
     const etkinlikEnlem = parseFloat("<%= etkinlik.konum?.x || 39.9334 %>");
     const etkinlikBoylam = parseFloat("<%= etkinlik.konum?.y || 32.8597 %>");
     const map = L.map('map').setView([etkinlikEnlem, etkinlikBoylam], 15);
@@ -522,5 +514,49 @@
         window.onload = scrollToBottom;
     </script>
     <script src="/static/js/notifications.js"></script>
+    <script>
+        const etkinlikEnlem2 = parseFloat("<%= etkinlik.konum?.x || 39.9334 %>");
+        const etkinlikBoylam2 = parseFloat("<%= etkinlik.konum?.y || 32.8597 %>");
+        const map2 = L.map('map_rota').setView([etkinlikEnlem2, etkinlikBoylam2], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map2);
+
+        const etkinlikMarker = L.marker([etkinlikEnlem2, etkinlikBoylam2], {
+            icon: L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+            }),
+            draggable: false,
+            title: "Etkinlik Konumu"
+        }).addTo(map2);
+
+        let clickMarker = null;
+
+        map2.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            if (clickMarker) {
+                clickMarker.setLatLng(e.latlng);
+            } else {
+            clickMarker = L.marker(e.latlng, {
+                    icon: L.icon({
+                        iconUrl: '/static/images/location.png', // Kullanıcı tıklama ikonu URL'si
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32],
+                    }),
+                    draggable: true, 
+                    title: "Seçilen Konum"
+                }).addTo(map2);
+                }
+
+                document.getElementById('enlem_etkinlik_rota').value = lat;
+                document.getElementById('boylam_etkinlik_rota').value = lng;
+            });
+
+
+    </script>
 </body>
 </html>

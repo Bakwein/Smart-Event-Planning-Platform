@@ -2172,7 +2172,9 @@ router.get('/etkinlik/:id', async function(req, res){
             message2: '',
             alert_type2: '',
             message3: '',
-            alert_type3: ''
+            alert_type3: '',
+            message4: '',
+            alert_type4: ''
         })
     }
     catch(err)
@@ -2218,7 +2220,10 @@ router.post("/send-message", async function(req, res)
             message2: 'Boş mesaj gönderemezsiniz',
             alert_type2: 'alert-danger',
             message3: 'Boş mesaj gönderemezsiniz',
-            alert_type3: 'alert-danger'
+            alert_type3: 'alert-danger',
+            message4: '',
+            alert_type4: ''
+            
         })
     }
     else if(kontrol.length == 0)
@@ -2290,7 +2295,9 @@ router.get("/katilimci/delete/:id", async function(req, res){
                 message2: '',
                 alert_type2: '',
                 message3: 'Katılımcı bulunamadı.',
-                alert_type3: 'alert-danger'
+                alert_type3: 'alert-danger',
+                message4: '',
+                alert_type4: ''
             })
         }
 

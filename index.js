@@ -47,7 +47,20 @@ app.use(async (req, res, next) => {
 
     const token = req.cookies.token;
 
+    const skipRoutes2 = [ 
+        '/user/login',
+        '/user/register',
+        '/user/photo_upload_render',
+        '/user/forgot_password_render',
+        '/user/new_password_render',
+        '/user/check_password',
+        '/user/update_new_password',
+    ]
+    
     if (!token) {
+        if(skipRoutes2.some(route => req.path.includes(route))){
+            return next();
+        }
         console.log("token yok");
         console.log(req.path);
         return res.redirect("/user/login");
@@ -160,7 +173,8 @@ app.post("/notifications/read", async (req, res) => {
     res.json({ success: true });
 });
 
-
+const bodyParser = require('body-parser');
+const openrouteservice = require('openrouteservice-js');
 
 //just upload the storage and return path
 /*
