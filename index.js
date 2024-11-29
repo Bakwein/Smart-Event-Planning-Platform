@@ -36,8 +36,11 @@ app.use(async (req, res, next) => {
         '/user/update_render',
         '/user/notifications',
         '/user/logout',
+        '/user/update_etkinlik',
+        '/favicon.ico',
         '/static',
         '/'
+        
     ]; // bu yeni bir şey eklendiğinde güncellenmeli yoksa bildirim kısmı arıza olur
     
     if (!skipRoutes.some(route => req.path.includes(route))) {
@@ -55,6 +58,7 @@ app.use(async (req, res, next) => {
         '/user/new_password_render',
         '/user/check_password',
         '/user/update_new_password',
+        '/user/new_password',
         '/admin'
     ]
     

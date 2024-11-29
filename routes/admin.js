@@ -198,13 +198,13 @@ router.get("/etkinlik/update/:id", async function(req, res){
 
     if(etkinlik.length != 1)
     {
-        res.render("admin/etkinlik", {
+        return res.render("admin/etkinlik", {
             title: 'Etkinlikler',
             onayGereken: onayGereken,
             etkinlikler: etkinlikler,
             kategori: kategori,
             message: '',
-            alert_type: '',
+            alert_type: 'alert-danger',
             message2: '',
             alert_type2: ''
         });

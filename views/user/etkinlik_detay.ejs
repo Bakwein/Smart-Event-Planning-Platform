@@ -3,6 +3,7 @@
 <head>
     <%- include('../partials/head') %>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+   
     <style>
         #map { height: 400px; margin-bottom: 20px; }
         .chat-box {
@@ -421,11 +422,18 @@
         </div>
         <div class="row">
             <div class="col-md-12 mt-3">
+                <h3>Google Maps Rota Planlama</h3>
+
+            </div>
+        </div>
+            <button type="button" style="margin-top: 15px;" onclick="butForCar()" class="btn btn-primary mb-2">Araç İçin Rota</button>
+            <button type="button" style="margin-top: 15px;" onclick="butForCycling()" class="btn btn-primary mb-2">Bisiklet İçin Rota</button>
+            <button type="button" style="margin-top: 15px;" onclick="butForWalk()" class="btn btn-primary mb-2">Yürüyüş İçin Rota</button>
+        <div class="row">
+            <div class="col-md-12 mt-3">
                 <h3>Rota Planlama</h3>
-                <button type="button" style="margin-top: 15px;" onclick="butForCar()" class="btn btn-primary mb-2">Araç İçin Rota</button>
-                <button type="button" style="margin-top: 15px;" onclick="butForCycling()" class="btn btn-primary mb-2">Bisiklet İçin Rota</button>
-                <button type="button" style="margin-top: 15px;" onclick="butForWalk()" class="btn btn-primary mb-2">Yürüyüş İçin Rota</button>
-                <div id="map_rota" style="height: 400px; margin-top: 20px;"></div>
+                <button type="button" style="margin-top: 15px;" onclick="butForCar2()" class="btn btn-primary mb-2">Rota Hesapla</button>
+                <div id="map_rota" style="height: 400px; margin-top: 20px; margin-bottom: 50px;"></div>
                 <input type="hidden" id="enlem_etkinlik_rota" name="enlem_etkinlik_rota" value="<%= etkinlik.konum.x %>">
                 <input type="hidden" id="boylam_etkinlik_rota" name="boylam_etkinlik_rota" value="<%= etkinlik.konum.y %>">
             </div>
@@ -440,9 +448,10 @@
             </div>
         <% } %>
     </div>
-    
-
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+
+    
     <script>
         
     function previewEventPhoto(event) {
@@ -578,29 +587,38 @@
         window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e2?hl=tr`, '_blank');
     }
 
-    async function butForCar2(){
-        const enlem = document.getElementById('enlem').value;
-        const boylam = document.getElementById('boylam').value;
-        const enlem2 = document.getElementById('enlem_etkinlik_rota').value;
-        const boylam2 = document.getElementById('boylam_etkinlik_rota').value;
-        const mode = 'driving-car';
+    async function butForCar2() {
+    // Fetch input values and parse them to floats
+    const enlem = parseFloat(document.getElementById('enlem').value);
+    const boylam = parseFloat(document.getElementById('boylam').value);
+    const enlem2 = parseFloat(document.getElementById('enlem_etkinlik_rota').value);
+    const boylam2 = parseFloat(document.getElementById('boylam_etkinlik_rota').value);
 
-        const start = enlem + ',' + boylam;
-        const end = enlem2 + ',' + boylam2;
-
-        const response = await fetch('/api/get-routes', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({start, end, mode}),
-        });
-
-        const routes = await response.json();
-        console.log(routes);
-
+    // Validate inputs
+    if (isNaN(enlem) || isNaN(boylam) || isNaN(enlem2) || isNaN(boylam2)) {
+        console.error("Invalid latitude or longitude values");
+        return;
     }
 
+    console.log("yo");
+
+    // Ensure map2 is defined and add the routing control
+    
+    if (typeof map2 !== "undefined") {
+        L.Routing.control({
+            waypoints: [
+                L.latLng(enlem, boylam),
+                L.latLng(enlem2, boylam2)
+            ],
+            routeWhileDragging: false
+        }).addTo(map2);
+        console.log("of");
+    } else {
+        console.error("map2 is not initialized");
+    }
+    
+}
+/*
     async function butForCycling2() {
         const enlem = document.getElementById('enlem_etkinlik_rota').value;
         const boylam = document.getElementById('boylam_etkinlik_rota').value;
@@ -610,7 +628,7 @@
         const enlem = document.getElementById('enlem_etkinlik_rota').value;
         const boylam = document.getElementById('boylam_etkinlik_rota').value;
     }
-    
+*/
 </script>
 </body>
 </html>

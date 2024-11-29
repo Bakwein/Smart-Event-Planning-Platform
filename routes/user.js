@@ -162,7 +162,7 @@ router.get("/profile", async function(req, res)
         const [puan,] = await db.execute("SELECT * FROM puan WHERE idkullaniciR = ?", [id]);
         const [etkinlikler,] = await db.execute("SELECT * FROM etkinlikler INNER JOIN katilimcilar ON etkinlikler.idetkinlikler = katilimcilar.idetkinlikR WHERE katilimcilar.idkullaniciR = ?", [id]);
 
-        const tarih = moment().format('YYYY-MM-DD HH:mm:ss');
+        const tarih = moment();
 
         if(results.length === 0)
         {
@@ -1704,6 +1704,8 @@ router.get('/profile/:profileid', async function(req, res)
         const profileid = req.params.profileid;
         console.log(profileid);
         const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [profileid]); 
+        const [puan,] = await db.execute("SELECT * FROM puan WHERE idkullaniciR = ?", [profileid]);
+        const [etkinlikler,] = await db.execute("SELECT * FROM etkinlikler INNER JOIN katilimcilar ON etkinlikler.idetkinlikler = katilimcilar.idetkinlikR WHERE katilimcilar.idkullaniciR = ?", [profileid]);
 
         if(results.length === 0)
         {
@@ -1724,7 +1726,9 @@ router.get('/profile/:profileid', async function(req, res)
                 soyisim: results[0].soyisim,
                 dogumTarihi: tarih,
                 telefon: results[0].telefon,
-                photoPath: results[0].photoPath
+                photoPath: results[0].photoPath,
+                puan: puan,
+                etkinlikler: etkinlikler
             });
         }
     }
@@ -2357,13 +2361,111 @@ router.get("/update_render/:id", async function(req, res)
     }
 });
 
-router.post("/update_render/:id", async function(req ,res)
+router.post("/update_render/:id", upload.single('etkinlikFoto'), async function(req ,res)
 {
     cookie_control(req, res);
     try{
         const id = req.params.id;
         console.log(id);
         console.log(req.body);
+
+        const {etkinlikFoto, etkinlikAdi, tarih, saat, etkinlikSuresi, kategori, aciklama, enlem, boylam} = req.body;
+        const etkinlikFotoPath = req.file ? "/static" + req.file.path.split('public')[1] : "/static/images/event.png";
+
+        const [kategoriler, ] = await db.execute("select * from ilgialanlari");
+
+        const [etkinlik,] = await db.execute("select * from etkinlikler where idetkinlikler = ?", [id]);
+        console.log(etkinlik[0].konum);
+
+        //kontroller
+        if(etkinlikAdi.length > 255 || etkinlikAdi.length <= 0)
+        {
+            return res.render('user/update_etkinlik', {
+                title: "Etkinlik Güncelle",
+                kategoriler: kategoriler,
+                etkinlik: etkinlik[0],
+                message: 'Etkinlik adı 255 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger'
+            });
+        }
+        else if(aciklama.length > 10000 || aciklama.length <= 0)
+        {
+            return res.render(`user/update_etkinlik`, {
+                title: "Etkinlik Güncelle",
+                kategoriler: kategoriler,
+                etkinlik: etkinlik[0],
+                message: 'Açıklama 10000 karakterden fazla, 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger'
+            });
+        }
+        else if(!kontroller.isValidDate(tarih))
+        {
+            return res.render(`user/update_etkinlik`, {
+                title: "Etkinlik Güncelle",
+                kategoriler: kategoriler,
+                etkinlik: etkinlik[0],
+                message: 'Tarih hatalı',
+                alert_type: 'alert-danger'
+            });
+        }
+        else if(!kontroller.isValidTime(saat))
+        {
+            return res.render(`user/update_etkinlik`, {
+                title: "Etkinlik Güncelle",
+                kategoriler: kategoriler,
+                etkinlik: etkinlik[0],
+                message: 'Saat hatalı',
+                alert_type: 'alert-danger'
+            });
+        }
+        else if(etkinlikSuresi <= 0)
+        {
+            return res.render(`user/update_etkinlik`, {
+                title: "Etkinlik Güncelle",
+                kategoriler: kategoriler,
+                etkinlik: etkinlik[0],
+                message: 'Etkinlik süresi 0 ve 0\'dan az olamaz',
+                alert_type: 'alert-danger'
+            });
+        }
+        else if(kategori === "0")
+        {
+            return res.render(`user/update_etkinlik`, {
+                title: "Etkinlik Güncelle",
+                kategoriler: kategoriler,
+                etkinlik: etkinlik[0],
+                message: 'Kategori seçilmelidir',
+                alert_type: 'alert-danger'
+            });
+        }
+
+        await db.execute("UPDATE etkinlikler SET etkinlikAdi = ?, aciklama = ?, tarih = ?, saat = ?, etkinlikSuresi = ?, konum = POINT(?, ?), kategori = ?, photoPath = ? WHERE idetkinlikler = ?", [etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, enlem, boylam, kategori, etkinlikFotoPath, id]);
+
+        const [olusturduklarim_onaysiz2,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [id, 0]);
+        const [olusturduklarim_onayli2,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [id, 1]);
+
+        const [katiliyorum2,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
+
+        const [katilmiyorum2,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
+
+        const [kategoriler2,] = await db.execute("SELECT * FROM ilgialanlari");
+
+        res.render("user/etkinlikler", {
+            title: "Etkinliklerim",
+            kategori: kategoriler2,
+            olusturduklarim_onaysiz: olusturduklarim_onaysiz2,
+            olusturduklarim_onayli: olusturduklarim_onayli2,
+            katiliyorum: katiliyorum2,
+            katilmiyorum: katilmiyorum2,
+            message: '',
+            alert_type: '',
+            message2: '',
+            alert_type2: '',
+            message3: '',
+            alert_type3: '',
+            message4: '',
+            alert_type4: '',
+        });
     }
     catch(err)
     {

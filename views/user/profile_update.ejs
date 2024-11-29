@@ -6,54 +6,68 @@
     
     <style>
         #map { height: 400px; margin-bottom: 20px; }
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* body'nin min-height'ini 100vh olarak ayarladık */
+            background: #2A2B33;
+            margin: 0; /* body'nin margin'ini sıfır olarak ayarladık */
+            padding: 0; /* body'nin padding'ini sıfır olarak ayarladık */
+        }
+        label{
+            color: #ccc;
+            font: bold;
+        }
     </style>
 </head>
 <body>
     <%- include('../partials/user/nav') %>
     <div class="container mt-3">
         <div class="row">
-            <div class="col-md-12 mt-3">
-                <h3>Profil Güncelleme</h3>
-            </div>
-            <div class="col-md-12 mt-3">
-                <img id="userPhoto" src="<%= photoPath %>" class="card-img-top mx-auto" alt="user icon" style="width: 50%; height: auto; cursor: pointer;">
+            <div class="col-md-4 text-center">
+                <h3 style="color: #fff;">Profil Güncelleme</h3>
+                <img id="userPhoto" src="<%= photoPath %>" class="card-img-top mx-auto mt-3" alt="user icon" style="width: 75%; height: auto; cursor: pointer; color: #ccc;">
                 <input type="file" id="photoUpload" accept="image/*" style="display: none;">
             </div>
-            <div class="col-md-12 mt-3">
+
+            <div class="col-md-8">
                 <form method="post">
-                    <div class="row mb-3">
-                        <label for="id" class="col-sm-2 col-from-label">Id</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label for="idkullanıcılar" class="col-sm-3 col-form-label text-end">Id</label>
+                        <div class="col-sm-9">
                             <input type="text" class="form-control" id="idkullanıcılar" name="idkullanıcılar" readonly value="<%= idkullanıcılar %>">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="KullanıcıAdı" class="col-sm-2 col-from-label">Kullanıcı Adı</label>
-                        <div class="col-sm-8">
+    
+                    <!-- Kullanıcı Adı Alanı -->
+                    <div class="row align-items-center mb-3">
+                        <label for="KullanıcıAdı" class="col-sm-3 col-form-label text-end">Kullanıcı Adı</label>
+                        <div class="col-sm-9">
                             <input type="text" class="form-control" id="KullanıcıAdı" name="KullanıcıAdı" value="<%= KullanıcıAdı %>">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="isim" class="col-sm-2 col-from-label">İsim:</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label for="isim" class="col-sm-3 col-from-label text-end">İsim</label>
+                        <div class="col-sm-9">
                             <input type="text" class="form-control" id="isim" name="isim" required  value="<%= isim %>">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="soyisim" class="col-sm-2 col-from-label">Soyisim:</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label for="soyisim" class="col-sm-3 col-from-label text-end">Soyisim</label>
+                        <div class="col-sm-9">
                             <input type="text" class="form-control" id="soyisim" name="soyisim"  value="<%= soyisim %>">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="dogumTarihi" class="col-sm-2 col-from-label">Doğum Tarihi:</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label for="dogumTarihi" class="col-sm-3 col-from-label text-end">Doğum Tarihi</label>
+                        <div class="col-sm-9">
                             <input type="date" id="dogumTarihi" name="dogumTarihi" value="<%= dogumTarihi %>" required>
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="cinsiyet" class="col-sm-2 col-from-label">Cinsiyet:</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label for="cinsiyet" class="col-sm-3 col-from-label text-end">Cinsiyet</label>
+                        <div class="col-sm-9">
                             <select id="cinsiyet" name="cinsiyet" required>
                                 <option value="0" <%= cinsiyet == "0" ? "selected" : "" %>>Belirtmek İstemiyorum</option>
                                 <option value="1" <%= cinsiyet == "1" ? "selected" : "" %>>Erkek</option>
@@ -61,41 +75,41 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="telefon" class="col-sm-2 col-from-label">Telefon(+90):</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label for="telefon" class="col-sm-3 col-from-label text-end">Telefon(+90)</label>
+                        <div class="col-sm-9">
                             <input type="text" class="form-control" id="telefon" name="telefon"  value="<%= telefon %>">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label class="col-sm-2 col-from-label">Konum:</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label class="col-sm-3 col-from-label text-end">Konum</label>
+                        <div class="col-sm-9">
                             <div id="map"></div>
                             <input type="hidden" id="enlem" name="enlem" value="<%= konum.x %>">
                             <input type="hidden" id="boylam" name="boylam" value="<%= konum.y %>">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="email" class="col-sm-2 col-from-label">Email:</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label for="email" class="col-sm-3 col-from-label text-end">Email</label>
+                        <div class="col-sm-9">
                             <input type="text" class="form-control" id="email" name="email"  value="<%= email %>">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="updatePassword" class="col-sm-2 col-from-label">Şifre Güncelle</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label for="updatePassword" class="col-sm-3 col-from-label text-end">Şifre Güncelle</label>
+                        <div class="col-sm-9">
                             <input type="checkbox" id="updatePassword" name="updatePassword">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="sifre" class="col-sm-2 col-from-label">Şifre:</label>
-                        <div class="col-sm-8">
+                    <div class="row align-items-center mb-3">
+                        <label for="sifre" class="col-sm-3 col-from-label text-end">Şifre</label>
+                        <div class="col-sm-9">
                             <input type="password" class="form-control" id="sifre" name="sifre" disabled>
                         </div>
                     </div>
                     
-                    <div class="row mb-3">
-                        <div class="col-sm-8 offset-sm-2">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-sm-9 offset-sm-3">
                             <button type="submit" class="btn btn-primary">Güncelle</button>
                         </div>
                     </div>
