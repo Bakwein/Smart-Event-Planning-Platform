@@ -9,7 +9,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+            background: #2A2B33;
         }
 
         .card-title {
@@ -25,6 +25,15 @@
             font-size: 0.9em; /* Yazı boyutunu küçültür */
             color: #333; /* Yazı rengi */
         }
+        .carousel-title {
+            position: absolute;
+            top: -20px; /* Kartın üstüne yerleştirmek için */
+            color: #fff;
+            font-size: 1.25rem;
+            background: rgba(0, 0, 0, 0.5); /* Arka plan için yarı saydam */
+            padding: 5px 10px;
+            border-radius: 5px; /* Kenarları yuvarlatma */
+        }
     </style>
     
 </head>
@@ -32,10 +41,7 @@
     <%- include('../partials/user/nav') %>
     <div class="container mt-3">
         <div class="row">
-            <div class="col-md-12 mt-3">
-                <h3>Kullanıcı Profili</h3>
-            </div>
-            <div class="d-flex justify-content-center" style="margin-top: 40px;">
+            <div class="col-md-6 d-flex justify-content-center" style="margin-top: 40px;">
                 <div class="card" style="width: 20rem;">
                     <img src=<%= photoPath %> class="card-img-top mx-auto" alt="user icon" style="width: 50%; height: auto;">
                     <div class="card-body">
@@ -66,6 +72,52 @@
                     </ul>
                     <div class="card-body">
                         <a href="/user/profile_update_render" class="btn btn-primary">Bilgilerini Güncelle</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center justify-content-center">
+                <div class="card" style="width: 25rem;">
+                    <h5 class="carousel title" style="margin-top: 3px; margin-bottom: 5px; margin-left: 10px;"> Geçmiş Etkinlikler </h5>
+                    <div id="photoCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            <% if (etkinlikler.length > 0) { %>
+                                <% etkinlikler.forEach(etkinlik => { %>
+                                    <% const etkinlikTarih = moment(etkinlik.tarih) %>
+                                    <% if (etkinlikTarih.isAfter(tarih) ) { %>
+                                        <div class="carousel-item active">
+                                            <div class="card-body">
+                                                <h5 class="card-title"> Geçmiş Etkinlik Bulunmamaktadır. </h5>
+                                            </div>
+                                        </div>
+                                    <% } else { %>
+                                        <div class="carousel-item active">
+                                            <img src="<%= etkinlik.photoPath %>" class="d-block w-100" alt="Photo 1">
+                                            <div class="card-body">
+                                                <h5 class="card-title"><%= etkinlik.etkinlikAdi %></h5>
+                                                <p class="card-text"><%= etkinlik.aciklama %></p>
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                <% }) %>
+                            <% } else { %>
+                                <div class="carousel-item active">
+                                    <img src="" class="d-block w-100" alt="Photo 1">
+                                    <div class="card-body">
+                                        <h5 class="card-title"> Geçmiş Etkinlik Bulunmamaktadır. </h5>
+                                    </div>
+                                </div>
+                            <% } %>
+                            
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#photoCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Önceki</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#photoCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Sonraki</span>
+                        </button>
                     </div>
                 </div>
             </div>

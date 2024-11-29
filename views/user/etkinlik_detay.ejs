@@ -558,5 +558,59 @@
 
 
     </script>
+
+<script>
+    async function butForCar() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+        window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e0?hl=tr`, '_blank');
+    }
+
+    async function butForCycling() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+        window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e1?hl=tr`, '_blank');
+    }
+
+    async function butForWalk() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+        window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e2?hl=tr`, '_blank');
+    }
+
+    async function butForCar2(){
+        const enlem = document.getElementById('enlem').value;
+        const boylam = document.getElementById('boylam').value;
+        const enlem2 = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam2 = document.getElementById('boylam_etkinlik_rota').value;
+        const mode = 'driving-car';
+
+        const start = enlem + ',' + boylam;
+        const end = enlem2 + ',' + boylam2;
+
+        const response = await fetch('/api/get-routes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({start, end, mode}),
+        });
+
+        const routes = await response.json();
+        console.log(routes);
+
+    }
+
+    async function butForCycling2() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+    }
+
+    async function butForWalk2() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+    }
+    
+</script>
 </body>
 </html>

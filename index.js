@@ -55,6 +55,7 @@ app.use(async (req, res, next) => {
         '/user/new_password_render',
         '/user/check_password',
         '/user/update_new_password',
+        '/admin'
     ]
     
     if (!token) {
@@ -70,7 +71,7 @@ app.use(async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
         // Admin rolü kontrolü
-        if (decoded.rol === "admin") {
+        if (decoded.role === "admin") {
             res.locals.unreadNotifications = 0;
             return next(); // Admin için next çağrısı
         }
@@ -102,6 +103,8 @@ app.use(async (req, res, next) => {
     next();
 });
 
+const moment = require('moment');
+app.locals.moment = moment;
 
 //routes
 app.use(loginRoutes);

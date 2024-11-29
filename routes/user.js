@@ -160,6 +160,9 @@ router.get("/profile", async function(req, res)
         const id = decoded.id;
         const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [id]); 
         const [puan,] = await db.execute("SELECT * FROM puan WHERE idkullaniciR = ?", [id]);
+        const [etkinlikler,] = await db.execute("SELECT * FROM etkinlikler INNER JOIN katilimcilar ON etkinlikler.idetkinlikler = katilimcilar.idetkinlikR WHERE katilimcilar.idkullaniciR = ?", [id]);
+
+        const tarih = moment().format('YYYY-MM-DD HH:mm:ss');
 
         if(results.length === 0)
         {
@@ -181,7 +184,9 @@ router.get("/profile", async function(req, res)
                 soyisim: results[0].soyisim,
                 dogumTarihi: tarih,
                 telefon: results[0].telefon,
-                photoPath: results[0].photoPath
+                photoPath: results[0].photoPath,
+                etkinlikler: etkinlikler,
+                tarih: tarih
             });
         }
     }
@@ -765,9 +770,23 @@ router.get("/home", async function(req, res){
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const id = decoded.id;
 
+    const [kategori,] = await db.execute("SELECT * FROM ilgialanlari");
+
+    const [katiliyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
+
+    //oylesine
+    const [katilmiyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
+
     //
     res.render('user/home', {
         title: "Anasayfa",
+        kategori: kategori,
+        katiliyorum: katiliyorum,
+        katilmiyorum: katilmiyorum,
+        message: '',
+        alert_type: '',
+        message2: '',
+        alert_type2: ''
     })
 });
 
