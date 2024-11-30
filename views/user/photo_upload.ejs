@@ -8,7 +8,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+            background: #2A2B33;
         }
 
         #uploadForm {
@@ -27,22 +27,22 @@
 
     <div class="container">
         <div class="row justify-content-center">
-            <h1> Profil Fotoğrafı Ekleme Ekranı</h1>
+            <h1 style="color: #fff"> <strong>Profil Fotoğrafı Ekleme Ekranı</strong></h1>
             <img id="profilePicture" src="<%= photoPath %>" alt="Profile Picture" style="width: 55%; height: 55%;">
 
     
             <!-- formda olacak -->
             <form id="uploadForm" action="/upload_photo" method="POST" enctype="multipart/form-data">
                 
-                <input type="file" name="photo" id="photo" accept="image/*" onchange="previewImage(event)">
+                <input type="file" name="photo" id="photo" accept="image/*" onchange="previewImage(event)" style="color: #fff">
                 <!-- Gizli input ile userId'yi gönderin -->
                 <input type="hidden" name="id" value="<%= userId %>">
-                <button type="submit" class="btn btn-login"  style="width: 50%;" >Yükle</button>
+                <button type="submit" class="btn btn-login"  style="width: 50%; color:#fff;" >Yükle</button>
 
             </form>
 
 
-            <button onclick="skipUpload()" class="btn btn-login" style="width: 55%;">Yüklemeden Devam Et!</button>
+            <button onclick="skipUpload()" class="btn btn-login" style="width: 55%; color: #fff;">Yüklemeden Devam Et!</button>
 
             <script>
                 function previewImage(event) {

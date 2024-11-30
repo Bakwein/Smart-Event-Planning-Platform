@@ -8,7 +8,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+            background: #2A2B33;
         }
     </style>
 </head>
@@ -18,7 +18,7 @@
     <div class="container mt-3">
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Onay Bekleyen Etkinliklerim</h3>
+                <h3 style="color: #fff; font: bold;">Onay Bekleyen Etkinliklerim</h3>
                 <% if (olusturduklarim_onaysiz.length > 0) { %>
                     <% olusturduklarim_onaysiz.forEach(etkinlik => { %>
                         <div class="card mb-3">
@@ -69,7 +69,7 @@
         <% } %>
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Onaylanmış Etkinliklerim</h3>
+                <h3 style="color: #fff; font: bold;">Onaylanmış Etkinliklerim</h3>
                 <% if (olusturduklarim_onayli.length > 0) { %>
                     <% olusturduklarim_onayli.forEach(etkinlik => { %>
                         <div class="card mb-3">
@@ -120,7 +120,7 @@
         <% } %>
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Katıldığım Etkinlikler</h3>
+                <h3 style="color: #fff; font: bold;">Katıldığım Etkinlikler</h3>
                 <% if (katiliyorum.length > 0) { %>
                     <% katiliyorum.forEach(etkinlik => { %>
                         <div class="card mb-3">
@@ -171,7 +171,7 @@
         <% } %>
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Katılabileceğim Etkinlikler</h3>
+                <h3 style="color: #fff; font: bold;">Katılabileceğim Etkinlikler</h3>
                 <% if (katilmiyorum.length > 0) { %>
                     <% katilmiyorum.forEach(etkinlik => { %>
                         <div class="card mb-3">

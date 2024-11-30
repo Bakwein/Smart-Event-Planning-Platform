@@ -6,6 +6,9 @@
    
     <style>
         #map { height: 400px; margin-bottom: 20px; }
+        body{
+            background: #2A2B33;
+        }
         .chat-box {
             height: 100%;
             width: 100%;
@@ -195,7 +198,7 @@
         <div class="container mt-3">
             <div class="row">
                 <div class="col-md-12">
-                    <h1 class="h3 mb-3">Etkinlik Sayfası</h1>
+                    <h1 class="h3 mb-3" style="color: #fff; font: bold;">Etkinlik Sayfası</h1>
                     <div class="row">
                         <div class="col-md-2">
                             <img src="<%= etkinlik.photoPath %>" class="img-fluid" alt="">
@@ -203,10 +206,10 @@
                         <div class="col-md-3">
                             <div class="card-body">
                                 <h4 class="card-name">
-                                    <a style="text-decoration: none; color: black" href="/user/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
+                                    <a style="text-decoration: none; color: #fff" href="/user/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
                                 </h4>
-                                <p class="card-text"><%= etkinlik.aciklama %> </p>
-                                <p class="card-text"><strong>Kategori: </strong> <% kategoriler.forEach(kat => { %>
+                                <p class="card-text" style="color: #ccc;"><%= etkinlik.aciklama %> </p>
+                                <p class="card-text" style="color: #fff;"><strong>Kategori: </strong> <% kategoriler.forEach(kat => { %>
                                     <% if (kat.idilgiAlanlari == etkinlik.kategori) { %>
                                         <%= kat.ilgiAlani %>
                                     <% } %>
@@ -214,12 +217,12 @@
                             </div>
                         </div>
                         <div class="col-md-2 d-flex flex-column justify-content-center align-items-center text-center">
-                            <p><strong>Tarih: </strong><%= etkinlik.tarih.getDate() %>-<%= (etkinlik.tarih.getMonth() + 1) %>-<%= etkinlik.tarih.getFullYear() %></p>
-                            <p><strong>Saat: </strong><%= etkinlik.saat %></p>
-                            <p><strong>Süre: </strong><%= etkinlik.etkinlikSuresi %> Dakika</p>
+                            <p style="color: #ccc;"><strong>Tarih: </strong><%= etkinlik.tarih.getDate() %>-<%= (etkinlik.tarih.getMonth() + 1) %>-<%= etkinlik.tarih.getFullYear() %></p>
+                            <p style="color: #ccc;"><strong>Saat: </strong><%= etkinlik.saat %></p>
+                            <p style="color: #ccc;"><strong>Süre: </strong><%= etkinlik.etkinlikSuresi %> Dakika</p>
                         </div>
                         <div class="col-md-3 d-flex flex-column align-items-center justify-content-center">
-                            <h5>Etkinlik Kurucusu: </h5>
+                            <h5 style="color: #ccc;">Etkinlik Kurucusu: </h5>
                             <% if (typeof kurucu !== 'undefined') { %>
                                 <div class="card w-100 h-100 mb-3">
                                     <div class="d-flex align-items-center p-3">
@@ -231,10 +234,12 @@
                                     </div>
                                 </div>
                             <% } else { %>
-                                <p style="text-align: center;">Admin tarafından oluşturuldu veya etkinlik kurucusu bulunamadı.</p>
+                                <div class="card w-100 h-100 mb-3">
+                                    <div class="d-flex align-items-center p-3">
+                                        <p style="text-align: center;">Admin tarafından oluşturuldu veya etkinlik kurucusu bulunamadı.</p>
+                                    </div>
+                                </div>
                             <% } %>
-
-                            
                         </div>
                         <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
                             <% if (typeof kurucu !== 'undefined' && kurucu.idkullanıcılar == kullanici_id) { %>
@@ -276,13 +281,13 @@
 
         <div class="katilimcilar">
             <div id="katilimciShow"></div>
-            <h2>KATILIMCILAR</h2>
+            <h2 style="color: #fff;"><strong>KATILIMCILAR</strong></h2>
             <% if (katilimci.length == 0) { %>
                 <p>Katılımcı bulunmamaktadır.</p>
             <% } else { %>
                 <% katilimci.forEach(kati => { %>
                     <div class="kutu">
-                        <span><%= kati.KullanıcıAdı %></span>
+                        <span style="color: #fff;"><%= kati.KullanıcıAdı %></span>
                         <% if (etkinlik.olusturanidkullaniciR == kullanici_id) { %>
                             <a class="kaldir" style="text-decoration: none; color: inherit;" href="/user/katilimci/delete/<%= kati.idkatilimcilar %>">X</a>
                         <% } %>
@@ -305,7 +310,7 @@
           <!-- Panel Chat -->
           <div class="panel" id="chat">
             <div class="panel-heading">
-              <h3 class="panel-title">
+              <h3 class="panel-title" style="color: #fff;">
                 <i class="icon wb-chat-text" aria-hidden="true"></i> Chat
               </h3>
             </div>
@@ -422,7 +427,7 @@
         </div>
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Google Maps Rota Planlama</h3>
+                <h3 style="color: #fff;">Google Maps Rota Planlama</h3>
 
             </div>
         </div>
@@ -431,7 +436,7 @@
             <button type="button" style="margin-top: 15px;" onclick="butForWalk()" class="btn btn-primary mb-2">Yürüyüş İçin Rota</button>
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Rota Planlama</h3>
+                <h3 style="color: #fff;">Rota Planlama</h3>
                 <button type="button" style="margin-top: 15px;" onclick="butForCar2()" class="btn btn-primary mb-2">Rota Hesapla</button>
                 <div id="map_rota" style="height: 400px; margin-top: 20px; margin-bottom: 50px;"></div>
                 <input type="hidden" id="enlem_etkinlik_rota" name="enlem_etkinlik_rota" value="<%= etkinlik.konum.x %>">

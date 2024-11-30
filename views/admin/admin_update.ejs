@@ -2,40 +2,49 @@
 <html lang="en">
 <head>
     <%- include('../partials/head') %>
+    <style>
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #2A2B33;
+        }
+    </style>
 </head>
 <body>
     <%- include('../partials/admin/nav') %>
     <div class="container mt-3">
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Admin Güncelle</h3>
+                <h3 style="color: #fff;"><strong>Admin Güncelle</strong></h3>
             </div>
             <div class="col-md-12 mt-3">
-                <img id="userPhoto" src="/static/images/default_admin.png" class="card-img-top mx-auto" alt="user icon" style="width: 50%; height: auto; cursor: pointer;">
+                <img id="userPhoto" src="/static/images/default_admin.png" class="card-img-top mx-auto" alt="user icon" style="width: 50%; height: auto; cursor: pointer; color: #ccc;">
                 <input type="file" id="photoUpload" accept="image/*" style="display: none;">
             </div>
             <div class="col-md-12 mt-3">
                 <form method="post">
                     <div class="row mb-3">
-                        <label for="id" class="col-sm-2 col-from-label">Id</label>
+                        <label for="id" class="col-sm-2 col-from-label" style="color: #ccc;">Id</label>
                         <div class="col-sm-8">
                             <input type="text" class="form-control" id="idadmin" name="idadmin" readonly value="<%= admin.idadmin %>">
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="KullanıcıAdı" class="col-sm-2 col-from-label">Kullanıcı Adı</label>
+                        <label for="KullanıcıAdı" class="col-sm-2 col-from-label" style="color: #ccc;">Kullanıcı Adı</label>
                         <div class="col-sm-8">
                             <input type="text" class="form-control" id="kullaniciAdi" name="kullaniciAdi" value="<%= admin.kullaniciAdi %>">
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="updatePassword" class="col-sm-2 col-from-label">Şifre Güncelle</label>
+                        <label for="updatePassword" class="col-sm-2 col-from-label" style="color: #ccc;">Şifre Güncelle</label>
                         <div class="col-sm-8">
                             <input type="checkbox" id="updatePassword" name="updatePassword">
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="sifre" class="col-sm-2 col-from-label">Şifre:</label>
+                        <label for="sifre" class="col-sm-2 col-from-label" style="color: #ccc;">Şifre</label>
                         <div class="col-sm-8">
                             <input type="password" class="form-control" id="sifre" name="sifre" disabled>
                         </div>
