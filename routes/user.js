@@ -763,6 +763,29 @@ router.get('/home_render', function(req, res)
     res.redirect('/user/home');
 });
 
+function toTitleCase(str) {
+    return str.replace(
+      /\w\S*/g,
+      text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
+    );
+  }
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+    const toRadians = (degrees) => degrees * (Math.PI / 180);
+
+    const R = 6371; // Dünya'nın yarıçapı (kilometre cinsinden)
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Mesafe (kilometre cinsinden)
+}
+
 router.get("/home", async function(req, res){
     cookie_control(req, res);
     //console.log("gridi");
@@ -770,19 +793,192 @@ router.get("/home", async function(req, res){
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const id = decoded.id;
 
+    const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [id]);
+    if(results.length === 0)
+    {
+        res.redirect("/user/logout");
+    }
+
     const [kategori,] = await db.execute("SELECT * FROM ilgialanlari");
 
     const [katiliyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
 
-    //oylesine
+    //etkinlik önerme olayı
+    const [ilgi_alani, ] = await db.execute("SELECT * FROM ilgialanlari");
+    let tum_ilgiler = [];
+    for(let i = 0; i < ilgi_alani.length; i++)
+    {
+        let ilgi = {
+            id: parseInt(ilgi_alani[i].idilgiAlanlari, 10),
+            sayi: 0
+        }
+        tum_ilgiler.push(ilgi);
+    }
+
+    //kullanicinin sectigi etkinlikler
+    const [kullanici_ilgileri, ] = await db.execute("SELECT * FROM kullanici_ilgileri WHERE idkullaniciR = ?", [id]);
+    for(let i = 0; i < kullanici_ilgileri.length; i++)
+    {
+        for(let j = 0; j < tum_ilgiler.length; j++)
+        {
+            if(kullanici_ilgileri[i].idilgiR === tum_ilgiler[j].id)
+            {
+                tum_ilgiler[j].sayi += 5;
+            }
+        }
+    }
+
+    console.log("secilene gore:", tum_ilgiler);
+
+    //katildigi tum etkinlikler
+    for(let i = 0; i < katiliyorum.length; i++)
+    {
+        for(let j = 0; j < tum_ilgiler.length; j++)
+        {
+            //console.log(katiliyorum[i].kategori, tum_ilgiler[j].id, "***");
+            if(katiliyorum[i].kategori == tum_ilgiler[j].id)
+            {
+                tum_ilgiler[j].sayi += 1;
+            }
+        }
+    }
+
+    //tum ilgileri sayi'ya gore buyukten kucuge sirala
+    tum_ilgiler.sort((a, b) => (a.sayi < b.sayi) ? 1 : -1);
+
+    console.log("secilene+etkinlige gore:", tum_ilgiler);
+
     const [katilmiyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
+
+    let katilinmayan_etkinlikler = [];
+
+    const etkinliklerSet = new Set();
+
+    for(let i = 0; i < katilmiyorum.length; i++)
+    {
+        //console.log(katilmiyorum[i].tarih, katilmiyorum[i].saat, katilmiyorum[i].etkinlikSuresi, "pua****");
+        const baslangic1 = moment(`${moment(katilmiyorum[i].tarih).format('YYYY-MM-DD')} ${katilmiyorum[i].saat}`, 'YYYY-MM-DD HH:mm:ss');
+        const bitis1 = moment(`${moment(katilmiyorum[i].tarih).format('YYYY-MM-DD')} ${katilmiyorum[i].saat}`, 'YYYY-MM-DD HH:mm:ss').add(katilmiyorum[i].etkinlikSuresi, 'minutes');
+
+        //sete ekle hepsini
+        etkinliklerSet.add(katilmiyorum[i].idetkinlikler);
+
+        for(let s = 0; s < katiliyorum.length; s++)
+        {
+            const baslangic2 = moment(`${moment(katiliyorum[s].tarih).format("YYYY-MM-DD")} ${katiliyorum[s].saat}`, 'YYYY-MM-DD HH:mm:ss');
+            const bitis2 = moment(`${moment(katiliyorum[s].tarih).format("YYYY-MM-DD")} ${katiliyorum[s].saat}`, 'YYYY-MM-DD HH:mm:ss').add(katiliyorum[s].etkinlikSuresi, 'minutes');
+            console.log(baslangic1, bitis1, baslangic2, bitis2, "**ok**", katilmiyorum[i].idetkinlikler, katiliyorum[s].idetkinlikler);
+
+            if(baslangic1.isBetween(baslangic2, bitis2) || bitis1.isBetween(baslangic2, bitis2))
+            {
+                console.log("oha cakisti :o");
+                etkinliklerSet.delete(katilmiyorum[i].idetkinlikler);
+                continue;
+            }
+            /*
+            let etkinlik = {
+                id: parseInt(katilmiyorum[i].idetkinlikler, 10),
+                kategori: katilmiyorum[i].kategori,
+                mesafe: haversineDistance(results[0].konum.x, results[0].konum.y, katilmiyorum[i].konum.x, katilmiyorum[i].konum.y),
+            }
+            katilinmayan_etkinlikler.push(etkinlik);
+            */
+        }
+        console.log("\n");
+    }
+
+    console.log(etkinliklerSet, "mf***********");
+
+    for(let i = 0; i < katilmiyorum.length; i++)
+    {
+        if(etkinliklerSet.has(katilmiyorum[i].idetkinlikler))
+        {
+            let etkinlik = {
+                id: parseInt(katilmiyorum[i].idetkinlikler, 10),
+                kategori: katilmiyorum[i].kategori,
+                mesafe: haversineDistance(results[0].konum.x, results[0].konum.y, katilmiyorum[i].konum.x, katilmiyorum[i].konum.y),
+            }
+            katilinmayan_etkinlikler.push(etkinlik);
+        }
+    }
+    
+    const ilgiSiraMap = new Map();
+    tum_ilgiler.forEach((ilgi, index) => {
+        ilgiSiraMap.set(ilgi.id, index); // Her id'ye sıralamadaki öncelik değeri atanıyor
+    });
+
+    katilinmayan_etkinlikler.sort((a, b) => {
+        const ilgiSiraA = ilgiSiraMap.get(Number(a.kategori));
+        const ilgiSiraB = ilgiSiraMap.get(Number(b.kategori));
+
+        // İlgi alanlarına göre sıralama yapılıyor
+        if (ilgiSiraA != ilgiSiraB) {
+            return ilgiSiraA - ilgiSiraB;
+        }
+        return a.mesafe - b.mesafe; // Mesafelere göre sıralama yapılıyor
+    });
+    console.log(katilinmayan_etkinlikler, "***********");
+
+    const etkinlik_siralama_map = new Map();
+    katilinmayan_etkinlikler.forEach((etkinlik, index) => {
+        etkinlik_siralama_map.set(etkinlik.id, index); // Her id'ye sıralamadaki öncelik değeri atanıyor
+    });
+
+    console.log(etkinlik_siralama_map);
+
+    let [siralanmis_etkinlikler, ] =  await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
+
+    siralanmis_etkinlikler = siralanmis_etkinlikler.filter(etkinlik => 
+        etkinlik_siralama_map.has(Number(etkinlik.idetkinlikler))
+    );
+
+
+    siralanmis_etkinlikler.sort((a, b) => {
+        const siraA = etkinlik_siralama_map.get(Number(a.idetkinlikler));
+        const siraB = etkinlik_siralama_map.get(Number(b.idetkinlikler));
+
+        return siraA - siraB;
+    });
+
+    console.log(siralanmis_etkinlikler, "yo***********");
+
+
+
+
+
+
+
+
+    //oylesine
+    
+
+    const [etkinlikler,] = await db.execute("select * from etkinlikler");
+
+    let tum_etkinlikler = [];
+
+    for(let i = 0; i < etkinlikler.length; i++)
+    {
+
+        //{}'li şekilde tüm etkinliklere isim kordinat ve id ekle
+        let etkinlik = {
+            id: etkinlikler[i].idetkinlikler,
+            isim: toTitleCase(etkinlikler[i].etkinlikAdi),
+            konum: etkinlikler[i].konum,
+            tarih: moment(etkinlikler[i].tarih).format('YYYY-MM-DD'),
+            saat: etkinlikler[i].saat.split(":")[0] + ":" + etkinlikler[i].saat.split(":")[1],
+        }
+        tum_etkinlikler.push(etkinlik);
+    }
+
+
 
     //
     res.render('user/home', {
         title: "Anasayfa",
         kategori: kategori,
         katiliyorum: katiliyorum,
-        katilmiyorum: katilmiyorum,
+        siralanmis_etkinlikler: siralanmis_etkinlikler,
+        tum_etkinlikler: tum_etkinlikler,
         message: '',
         alert_type: '',
         message2: '',
@@ -1351,7 +1547,7 @@ router.post("/create_etkinlik", upload.single('etkinlikFoto'), async function(re
                 kategoriler: kategoriler
             });
         }
-        else if(kategori === "0")
+        else if(kategori === "-1")
         {
             return res.render("user/create_etkinlik", {
                 title: "Etkinlik Oluştur",
@@ -1507,15 +1703,15 @@ router.get("/etkinlik/join/:id", async function(req, res){
        
 
         //etlinklik baslangic bitis
-        const baslangic = moment(etkinlik[0].tarih);
-        const bitis = moment(etkinlik[0].tarih).add(etkinlik[0].etkinlikSuresi, 'minutes');
+        const baslangic = moment(`${moment(etkinlik[0].tarih).format('YYYY-MM-DD')} ${etkinlik[0].saat}`, 'YYYY-MM-DD HH:mm');
+        const bitis = moment(`${moment(etkinlik[0].tarih).format('YYYY-MM-DD')} ${etkinlik[0].saat}`, 'YYYY-MM-DD HH:mm').add(etkinlik[0].etkinlikSuresi, 'minutes');
 
         //cakisma var mi
-        const [bu_haric_tum_etkinlikler,] = await db.execute("select * from etkinlikler where idetkinlikler != ?", [id]);
-        for(let i = 0; i < bu_haric_tum_etkinlikler.length; i++)
+        const [bu_haric_katildigim_tum_etkinlikler,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [kullanici_id, 1]);
+        for(let i = 0; i < bu_haric_katildigim_tum_etkinlikler.length; i++)
         {
-            const baslangic2 = moment(bu_haric_tum_etkinlikler[i].tarih);
-            const bitis2 = moment(bu_haric_tum_etkinlikler[i].tarih).add(bu_haric_tum_etkinlikler[i].etkinlikSuresi, 'minutes');
+            const baslangic2 = moment(`${moment(bu_haric_katildigim_tum_etkinlikler[i].tarih).format("YYYY-MM-DD")} ${bu_haric_katildigim_tum_etkinlikler[i].saat}`, 'YYYY-MM-DD HH:mm');
+            const bitis2 = moment(`${moment(bu_haric_katildigim_tum_etkinlikler[i].tarih).format("YYYY-MM-DD")} ${bu_haric_katildigim_tum_etkinlikler[i].saat}`, 'YYYY-MM-DD HH:mm').add(bu_haric_katildigim_tum_etkinlikler[i].etkinlikSuresi, 'minutes');
 
             if(baslangic.isBetween(baslangic2, bitis2) || bitis.isBetween(baslangic2, bitis2))
             {
@@ -1532,7 +1728,7 @@ router.get("/etkinlik/join/:id", async function(req, res){
                     alert_type2: '',
                     message3: '',
                     alert_type3: '',
-                    message4: 'Etkinlik başka bir etkinlikle çakışıyor!',
+                    message4: 'Etkinlik başka bir etkinlikle çakışıyor! <a href="/user/etkinlik-onerisi" style="display:block; text-align:center; margin-top:5px">Buraya tıklayarak size uygun etkinlik seçebilirsiniz</a>',
                     alert_type4: 'alert-danger',
         
                 });
@@ -1634,15 +1830,15 @@ router.get("/etkinlik/join2/:id", async function(req, res){
         }
 
         //etlinklik baslangic bitis
-        const baslangic = moment(etkinlik[0].tarih);
-        const bitis = moment(etkinlik[0].tarih).add(etkinlik[0].etkinlikSuresi, 'minutes');
+        const baslangic = moment(`${moment(etkinlik[0].tarih).format('YYYY-MM-DD')} ${etkinlik[0].saat}`, 'YYYY-MM-DD HH:mm');
+        const bitis = moment(`${moment(etkinlik[0].tarih).format('YYYY-MM-DD')} ${etkinlik[0].saat}`, 'YYYY-MM-DD HH:mm').add(etkinlik[0].etkinlikSuresi, 'minutes');
 
         //cakisma var mi
-        const [bu_haric_tum_etkinlikler,] = await db.execute("select * from etkinlikler where idetkinlikler != ?", [id]);
-        for(let i = 0; i < bu_haric_tum_etkinlikler.length; i++)
+        const [bu_haric_katildigim_tum_etkinlikler,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [kullanici_id, 1]);
+        for(let i = 0; i < bu_haric_katildigim_tum_etkinlikler.length; i++)
         {
-            const baslangic2 = moment(bu_haric_tum_etkinlikler[i].tarih);
-            const bitis2 = moment(bu_haric_tum_etkinlikler[i].tarih).add(bu_haric_tum_etkinlikler[i].etkinlikSuresi, 'minutes');
+            const baslangic2 = moment(`${moment(bu_haric_katildigim_tum_etkinlikler[i].tarih).format("YYYY-MM-DD")} ${bu_haric_katildigim_tum_etkinlikler[i].saat}`, 'YYYY-MM-DD HH:mm');
+            const bitis2 = moment(`${moment(bu_haric_katildigim_tum_etkinlikler[i].tarih).format("YYYY-MM-DD")} ${bu_haric_katildigim_tum_etkinlikler[i].saat}`, 'YYYY-MM-DD HH:mm').add(bu_haric_katildigim_tum_etkinlikler[i].etkinlikSuresi, 'minutes');
 
             if(baslangic.isBetween(baslangic2, bitis2) || bitis.isBetween(baslangic2, bitis2))
             {
@@ -1659,7 +1855,7 @@ router.get("/etkinlik/join2/:id", async function(req, res){
                     alert_type2: '',
                     message3: '',
                     alert_type3: '',
-                    message4: 'Etkinlik başka bir etkinlikle çakışıyor!',
+                    message4: 'Etkinlik başka bir etkinlikle çakışıyor! <a href="/user/etkinlik-onerisi" style="display:block; text-align:center; margin-top:5px">Buraya tıklayarak size uygun etkinlik seçebilirsiniz</a>',
                     alert_type4: 'alert-danger',
         
                 });
@@ -2094,7 +2290,7 @@ router.get("/etkinlik/update/:id", async function(req, res){
             });
         }
 
-        res.redirect(`/user/update_render/${id}`);
+        res.redirect("/user/etkinlikler");
     }
     catch(err)
     {
@@ -2313,6 +2509,7 @@ router.get("/katilimci/delete/:id", async function(req, res){
                 mesajlar: mesajlar,
                 kullanıcılar: kullanicilar,
                 katilimci: katilimci,
+                kullanici_id: id,
                 message: '',
                 alert_type: '',
                 message2: '',
@@ -2428,7 +2625,7 @@ router.post("/update_render/:id", upload.single('etkinlikFoto'), async function(
                 alert_type: 'alert-danger'
             });
         }
-        else if(kategori === "0")
+        else if(kategori === "-1")
         {
             return res.render(`user/update_etkinlik`, {
                 title: "Etkinlik Güncelle",
@@ -2489,6 +2686,174 @@ router.get("/notifications/:id", async function(req, res){
     await db.execute("DELETE FROM bildirim WHERE idbildirim = ?", [bildirim_id]);
 
     res.redirect("/user/notifications");
+});
+
+router.get("/etkinlik-onerisi", async function(req, res){
+    cookie_control(req, res);
+    const token = req.cookies.token;
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const id = decoded.id;
+
+    const [results,] = await db.execute("SELECT * FROM kullanıcılar where idkullanıcılar = ?", [id]);
+    if(results.length === 0)
+    {
+        res.redirect("/user/logout");
+    }
+
+    const [kategori,] = await db.execute("SELECT * FROM ilgialanlari");
+
+    const [katiliyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
+
+    //etkinlik önerme olayı
+    const [ilgi_alani, ] = await db.execute("SELECT * FROM ilgialanlari");
+    let tum_ilgiler = [];
+    for(let i = 0; i < ilgi_alani.length; i++)
+    {
+        let ilgi = {
+            id: parseInt(ilgi_alani[i].idilgiAlanlari, 10),
+            sayi: 0
+        }
+        tum_ilgiler.push(ilgi);
+    }
+
+    //kullanicinin sectigi etkinlikler
+    const [kullanici_ilgileri, ] = await db.execute("SELECT * FROM kullanici_ilgileri WHERE idkullaniciR = ?", [id]);
+    for(let i = 0; i < kullanici_ilgileri.length; i++)
+    {
+        for(let j = 0; j < tum_ilgiler.length; j++)
+        {
+            if(kullanici_ilgileri[i].idilgiR === tum_ilgiler[j].id)
+            {
+                tum_ilgiler[j].sayi += 5;
+            }
+        }
+    }
+
+    console.log("secilene gore:", tum_ilgiler);
+
+    //katildigi tum etkinlikler
+    for(let i = 0; i < katiliyorum.length; i++)
+    {
+        for(let j = 0; j < tum_ilgiler.length; j++)
+        {
+            //console.log(katiliyorum[i].kategori, tum_ilgiler[j].id, "***");
+            if(katiliyorum[i].kategori == tum_ilgiler[j].id)
+            {
+                tum_ilgiler[j].sayi += 1;
+            }
+        }
+    }
+
+    //tum ilgileri sayi'ya gore buyukten kucuge sirala
+    tum_ilgiler.sort((a, b) => (a.sayi < b.sayi) ? 1 : -1);
+
+    console.log("secilene+etkinlige gore:", tum_ilgiler);
+
+    const [katilmiyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
+
+    let katilinmayan_etkinlikler = [];
+
+    const etkinliklerSet = new Set();
+
+    for(let i = 0; i < katilmiyorum.length; i++)
+    {
+        //console.log(katilmiyorum[i].tarih, katilmiyorum[i].saat, katilmiyorum[i].etkinlikSuresi, "pua****");
+        const baslangic1 = moment(`${moment(katilmiyorum[i].tarih).format('YYYY-MM-DD')} ${katilmiyorum[i].saat}`, 'YYYY-MM-DD HH:mm:ss');
+        const bitis1 = moment(`${moment(katilmiyorum[i].tarih).format('YYYY-MM-DD')} ${katilmiyorum[i].saat}`, 'YYYY-MM-DD HH:mm:ss').add(katilmiyorum[i].etkinlikSuresi, 'minutes');
+
+        //sete ekle hepsini
+        etkinliklerSet.add(katilmiyorum[i].idetkinlikler);
+
+        for(let s = 0; s < katiliyorum.length; s++)
+        {
+            const baslangic2 = moment(`${moment(katiliyorum[s].tarih).format("YYYY-MM-DD")} ${katiliyorum[s].saat}`, 'YYYY-MM-DD HH:mm:ss');
+            const bitis2 = moment(`${moment(katiliyorum[s].tarih).format("YYYY-MM-DD")} ${katiliyorum[s].saat}`, 'YYYY-MM-DD HH:mm:ss').add(katiliyorum[s].etkinlikSuresi, 'minutes');
+            console.log(baslangic1, bitis1, baslangic2, bitis2, "**ok**", katilmiyorum[i].idetkinlikler, katiliyorum[s].idetkinlikler);
+
+            if(baslangic1.isBetween(baslangic2, bitis2) || bitis1.isBetween(baslangic2, bitis2))
+            {
+                console.log("oha cakisti :o");
+                etkinliklerSet.delete(katilmiyorum[i].idetkinlikler);
+                continue;
+            }
+            /*
+            let etkinlik = {
+                id: parseInt(katilmiyorum[i].idetkinlikler, 10),
+                kategori: katilmiyorum[i].kategori,
+                mesafe: haversineDistance(results[0].konum.x, results[0].konum.y, katilmiyorum[i].konum.x, katilmiyorum[i].konum.y),
+            }
+            katilinmayan_etkinlikler.push(etkinlik);
+            */
+        }
+        console.log("\n");
+    }
+
+    console.log(etkinliklerSet, "mf***********");
+
+    for(let i = 0; i < katilmiyorum.length; i++)
+    {
+        if(etkinliklerSet.has(katilmiyorum[i].idetkinlikler))
+        {
+            let etkinlik = {
+                id: parseInt(katilmiyorum[i].idetkinlikler, 10),
+                kategori: katilmiyorum[i].kategori,
+                mesafe: haversineDistance(results[0].konum.x, results[0].konum.y, katilmiyorum[i].konum.x, katilmiyorum[i].konum.y),
+            }
+            katilinmayan_etkinlikler.push(etkinlik);
+        }
+    }
+
+    
+    const ilgiSiraMap = new Map();
+    tum_ilgiler.forEach((ilgi, index) => {
+        ilgiSiraMap.set(ilgi.id, index); // Her id'ye sıralamadaki öncelik değeri atanıyor
+    });
+
+    katilinmayan_etkinlikler.sort((a, b) => {
+        const ilgiSiraA = ilgiSiraMap.get(Number(a.kategori));
+        const ilgiSiraB = ilgiSiraMap.get(Number(b.kategori));
+
+        // İlgi alanlarına göre sıralama yapılıyor
+        if (ilgiSiraA != ilgiSiraB) {
+            return ilgiSiraA - ilgiSiraB;
+        }
+        return a.mesafe - b.mesafe; // Mesafelere göre sıralama yapılıyor
+    });
+    console.log(katilinmayan_etkinlikler, "***********");
+
+    const etkinlik_siralama_map = new Map();
+    katilinmayan_etkinlikler.forEach((etkinlik, index) => {
+        etkinlik_siralama_map.set(etkinlik.id, index); // Her id'ye sıralamadaki öncelik değeri atanıyor
+    });
+
+    console.log(etkinlik_siralama_map);
+
+    let [siralanmis_etkinlikler, ] =  await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
+
+    siralanmis_etkinlikler = siralanmis_etkinlikler.filter(etkinlik => 
+        etkinlik_siralama_map.has(Number(etkinlik.idetkinlikler))
+    );
+
+
+    siralanmis_etkinlikler.sort((a, b) => {
+        const siraA = etkinlik_siralama_map.get(Number(a.idetkinlikler));
+        const siraB = etkinlik_siralama_map.get(Number(b.idetkinlikler));
+
+        return siraA - siraB;
+    });
+
+    console.log(siralanmis_etkinlikler, "yo***********");
+
+
+    res.render("user/etkinlik_onerisi", {
+        title: "Etkinlik Önerisi",
+        kategori: kategori,
+        etkinlikler: siralanmis_etkinlikler,
+        message: '',
+        alert_type: ''
+    });
+
+    
 });
 
 

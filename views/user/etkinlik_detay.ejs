@@ -287,9 +287,9 @@
             <% } else { %>
                 <% katilimci.forEach(kati => { %>
                     <div class="kutu">
-                        <span style="color: #fff;"><%= kati.KullanıcıAdı %></span>
+                        <a style="color: #fff; text-decoration: none;" href="/user/profile/<%= kati.idkullaniciR %>"><%= kati.KullanıcıAdı %></a>
                         <% if (etkinlik.olusturanidkullaniciR == kullanici_id) { %>
-                            <a class="kaldir" style="text-decoration: none; color: inherit;" href="/user/katilimci/delete/<%= kati.idkatilimcilar %>">X</a>
+                            <a class="kaldir" style="text-decoration: none; color: inherit;" href="/user/katilimci/delete/<%= kati.idkullaniciR %>">X</a>
                         <% } %>
                       </div>
                 <% }) %>
@@ -428,12 +428,12 @@
         <div class="row">
             <div class="col-md-12 mt-3">
                 <h3 style="color: #fff;">Google Maps Rota Planlama</h3>
-
+                <button type="button" style="margin-top: 15px;" onclick="butForCar()" class="btn btn-primary mb-2">Araç İçin Rota</button>
+                <button type="button" style="margin-top: 15px;" onclick="butForCycling()" class="btn btn-primary mb-2">Bisiklet İçin Rota</button>
+                <button type="button" style="margin-top: 15px;" onclick="butForWalk()" class="btn btn-primary mb-2">Yürüyüş İçin Rota</button>
             </div>
         </div>
-            <button type="button" style="margin-top: 15px;" onclick="butForCar()" class="btn btn-primary mb-2">Araç İçin Rota</button>
-            <button type="button" style="margin-top: 15px;" onclick="butForCycling()" class="btn btn-primary mb-2">Bisiklet İçin Rota</button>
-            <button type="button" style="margin-top: 15px;" onclick="butForWalk()" class="btn btn-primary mb-2">Yürüyüş İçin Rota</button>
+            
         <div class="row">
             <div class="col-md-12 mt-3">
                 <h3 style="color: #fff;">Rota Planlama</h3>
@@ -443,6 +443,8 @@
                 <input type="hidden" id="boylam_etkinlik_rota" name="boylam_etkinlik_rota" value="<%= etkinlik.konum.y %>">
             </div>
         </div>
+        <!-- boş div sonra doldurulacak-->
+        <div id="rota-hata"></div>
         <% if (message4 && message4.length > 0) { %>
             <div class="row justify-content-center" style="margin-left: 90px;">
                 <div class="col-md-8">
@@ -573,67 +575,74 @@
 
     </script>
 
-<script>
-    async function butForCar() {
-        const enlem = document.getElementById('enlem_etkinlik_rota').value;
-        const boylam = document.getElementById('boylam_etkinlik_rota').value;
-        window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e0?hl=tr`, '_blank');
-    }
+    <script>
+        async function butForCar() {
+            const enlem = document.getElementById('enlem_etkinlik_rota').value;
+            const boylam = document.getElementById('boylam_etkinlik_rota').value;
+            window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e0?hl=tr`, '_blank');
+        }
 
-    async function butForCycling() {
-        const enlem = document.getElementById('enlem_etkinlik_rota').value;
-        const boylam = document.getElementById('boylam_etkinlik_rota').value;
-        window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e1?hl=tr`, '_blank');
-    }
+        async function butForCycling() {
+            const enlem = document.getElementById('enlem_etkinlik_rota').value;
+            const boylam = document.getElementById('boylam_etkinlik_rota').value;
+            window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e1?hl=tr`, '_blank');
+        }
 
-    async function butForWalk() {
-        const enlem = document.getElementById('enlem_etkinlik_rota').value;
-        const boylam = document.getElementById('boylam_etkinlik_rota').value;
-        window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e2?hl=tr`, '_blank');
-    }
+        async function butForWalk() {
+            const enlem = document.getElementById('enlem_etkinlik_rota').value;
+            const boylam = document.getElementById('boylam_etkinlik_rota').value;
+            window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e2?hl=tr`, '_blank');
+        }
 
-    async function butForCar2() {
-    // Fetch input values and parse them to floats
-    const enlem = parseFloat(document.getElementById('enlem').value);
-    const boylam = parseFloat(document.getElementById('boylam').value);
-    const enlem2 = parseFloat(document.getElementById('enlem_etkinlik_rota').value);
-    const boylam2 = parseFloat(document.getElementById('boylam_etkinlik_rota').value);
+        async function butForCar2() {
+        // Fetch input values and parse them to floats
+        const enlem = parseFloat(document.getElementById('enlem').value);
+        const boylam = parseFloat(document.getElementById('boylam').value);
+        const enlem2 = parseFloat(document.getElementById('enlem_etkinlik_rota').value);
+        const boylam2 = parseFloat(document.getElementById('boylam_etkinlik_rota').value);
 
-    // Validate inputs
-    if (isNaN(enlem) || isNaN(boylam) || isNaN(enlem2) || isNaN(boylam2)) {
-        console.error("Invalid latitude or longitude values");
-        return;
-    }
+        // Validate inputs
+        if (isNaN(enlem) || isNaN(boylam) || isNaN(enlem2) || isNaN(boylam2)) {
+            console.error("Invalid latitude or longitude values");
+            return;
+        }
 
-    console.log("yo");
+        console.log("yo");
 
-    // Ensure map2 is defined and add the routing control
-    
-    if (typeof map2 !== "undefined") {
-        L.Routing.control({
-            waypoints: [
-                L.latLng(enlem, boylam),
-                L.latLng(enlem2, boylam2)
-            ],
-            routeWhileDragging: false
-        }).addTo(map2);
-        console.log("of");
-    } else {
-        console.error("map2 is not initialized");
+        // Ensure map2 is defined and add the routing control
+        
+        if (typeof map2 !== "undefined") {
+            L.Routing.control({
+                waypoints: [
+                    L.latLng(enlem, boylam),
+                    L.latLng(enlem2, boylam2)
+                ],
+                routeWhileDragging: true,
+                reverseWaypoints: true,
+                showAlternatives: true,
+                router: new L.Routing.OSRMv1({
+                    serviceUrl: 'https://router.project-osrm.org/route/v1'
+        })
+            }).addTo(map2);
+            //console.log("of");
+        } else {
+            console.error("map2 is not initialized");
+            //div'i doldur
+            document.getElementById('rota-hata').innerHTML = '<div class="alert alert-danger" role="alert">Harita yüklenemedi. Lütfen sayfayı yenileyin.</div>';
+        }
+        
     }
-    
-}
-/*
-    async function butForCycling2() {
-        const enlem = document.getElementById('enlem_etkinlik_rota').value;
-        const boylam = document.getElementById('boylam_etkinlik_rota').value;
-    }
+    /*
+        async function butForCycling2() {
+            const enlem = document.getElementById('enlem_etkinlik_rota').value;
+            const boylam = document.getElementById('boylam_etkinlik_rota').value;
+        }
 
-    async function butForWalk2() {
-        const enlem = document.getElementById('enlem_etkinlik_rota').value;
-        const boylam = document.getElementById('boylam_etkinlik_rota').value;
-    }
-*/
-</script>
+        async function butForWalk2() {
+            const enlem = document.getElementById('enlem_etkinlik_rota').value;
+            const boylam = document.getElementById('boylam_etkinlik_rota').value;
+        }
+    */
+    </script>
 </body>
 </html>

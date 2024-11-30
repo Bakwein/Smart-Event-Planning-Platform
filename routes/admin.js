@@ -518,7 +518,7 @@ router.get("/katilimci/delete/:id", async function(req, res){
                 message2: '',
                 alert_type2: '',
                 message3: 'Katılımcı bulunamadı.',
-                alert_type3: 'alert-danger'
+                alert_type3: 'alert-danger',
             })
         }
 
@@ -1497,6 +1497,13 @@ router.get('/home_render', function(req, res)
     res.redirect('/admin/home');
 });
 
+function toTitleCase(str) {
+    return str.replace(
+      /\w\S*/g,
+      text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
+    );
+  }
+
 router.get("/home", async function(req, res){
     cookie_control(req, res);
     //console.log("gridi");
@@ -1504,9 +1511,28 @@ router.get("/home", async function(req, res){
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const id = decoded.id;
 
+    const [etkinlikler,] = await db.execute("select * from etkinlikler");
+
+    let tum_etkinlikler = [];
+
+    for(let i = 0; i < etkinlikler.length; i++)
+    {
+
+        //{}'li şekilde tüm etkinliklere isim kordinat ve id ekle
+        let etkinlik = {
+            id: etkinlikler[i].idetkinlikler,
+            isim: toTitleCase(etkinlikler[i].etkinlikAdi),
+            konum: etkinlikler[i].konum,
+            tarih: moment(etkinlikler[i].tarih).format('YYYY-MM-DD'),
+            saat: etkinlikler[i].saat.split(":")[0] + ":" + etkinlikler[i].saat.split(":")[1],
+        }
+        tum_etkinlikler.push(etkinlik);
+    }
+
     //
     res.render('admin/home', {
         title: "Anasayfa",
+        tum_etkinlikler: tum_etkinlikler,
     })
 });
 

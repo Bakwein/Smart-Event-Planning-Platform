@@ -22,7 +22,10 @@ const jwt = require('jsonwebtoken');
 app.use("/libs", express.static(path.join(__dirname,"node_modules")));
 app.use("/static", express.static(path.join(__dirname,"public")));
 
+
+
 app.use(async (req, res, next) => {
+    console.log(req.path);
     const skipRoutes = [
         '/user/ilgi_list',
         '/user/profile',
@@ -37,6 +40,7 @@ app.use(async (req, res, next) => {
         '/user/notifications',
         '/user/logout',
         '/user/update_etkinlik',
+        '/user/etkinlik-onerisi',
         '/favicon.ico',
         '/static',
         '/'
@@ -59,6 +63,7 @@ app.use(async (req, res, next) => {
         '/user/check_password',
         '/user/update_new_password',
         '/user/new_password',
+        '/favicon.ico',
         '/admin'
     ]
     
@@ -68,7 +73,8 @@ app.use(async (req, res, next) => {
         }
         console.log("token yok");
         console.log(req.path);
-        return res.redirect("/user/login");
+        res.redirect("/user/login");
+        return next();
     }
 
     try {
@@ -89,7 +95,8 @@ app.use(async (req, res, next) => {
         );
 
         if (user.length === 0) {
-            return res.redirect("/user/logout");
+            res.redirect("/user/logout");
+            return next();
         }
 
         const kullanici_id = user[0].idkullanıcılar;
@@ -101,7 +108,9 @@ app.use(async (req, res, next) => {
         res.locals.unreadNotifications = rows[0].unreadNotifications || 0;
     } catch (error) {
         console.error("JWT doğrulama hatası:", error);
-        return res.redirect("/user/login");
+        res.clearCookie('token');
+        res.redirect("/");
+        return next();
     }
     //console.log(res.locals.unreadNotifications);
     next();

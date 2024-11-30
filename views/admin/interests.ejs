@@ -8,7 +8,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+            background: #2A2B33;
         }
     </style>
 </head>
@@ -18,24 +18,24 @@
     <div class="container mt-3">
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>İlgiler</h3>
+                <h3 style="color: #fff;"><strong>İlgiler</strong></h3>
             </div>
             <div class="col-md-12 mt-3">
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th style="width:50px">İlgi Id</th>
-                            <th>İlgi Alanı</th>
+                            <th style="width:50px; color: #fff">İlgi Id</th>
+                            <th style="color: #fff;">İlgi Alanı</th>
                             <th style="width:130px"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <% ilgiler.forEach(ilgi => { %>
                             <tr>
-                                <td>
+                                <td style="color: #ccc;">
                                     <%= ilgi.idilgiAlanlari%>
                                 </td>
-                                <td>
+                                <td style="color: #ccc;">
                                     <%= ilgi.ilgiAlani %>   
                                 </td>
                                 <td>
@@ -74,15 +74,15 @@
     <div class="container mt-3">
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>İlişkiler</h3>
+                <h3 style="color: #fff;"><strong>İlişkiler</strong></h3>
             </div>
             <div class="col-md-12 mt-3">
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th style="width:50px">İlişki Id</th>
-                            <th>Kullanıcı Adı</th>
-                            <th>İlgi Alanı</th>
+                            <th style="width:50px; color: #fff;">İlişki Id</th>
+                            <th style="color: #fff;">Kullanıcı Adı</th>
+                            <th style="color: #fff;">İlgi Alanı</th>
                             <th style="width:130px"></th>
                         </tr>
                     </thead>
@@ -90,13 +90,13 @@
 
                         <% iliskiler.forEach(iliski => { %>
                             <tr>
-                                <td>
+                                <td style="color: #ccc;">
                                     <%= iliski.idkullanici_ilgileri %>
                                 </td>
-                                <td>
+                                <td style="color: #ccc;">
                                     <%= iliski.KullanıcıAdı %>   
                                 </td>
-                                <td>
+                                <td style="color: #ccc;">
                                     <%= iliski.ilgiAlani %>   
                                 </td>
                                 <td>

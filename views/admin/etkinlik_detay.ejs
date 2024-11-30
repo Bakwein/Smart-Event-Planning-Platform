@@ -5,6 +5,15 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
         #map { height: 400px; margin-bottom: 20px; }
+
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #2A2B33;
+        }
+
         .chat-box {
             height: 100%;
             width: 100%;
@@ -177,6 +186,7 @@
             text-decoration: none;
             line-height: normal;
             margin-top: 8px;
+            margin-right: 5px;
             text-align: center;
             font-size: 12px;
         }
@@ -188,18 +198,18 @@
         <div class="container mt-3">
             <div class="row">
                 <div class="col-md-12">
-                    <h1 class="h3 mb-3">Etkinlik Sayfası</h1>
+                    <h1 class="h3 mb-3" style="color: #fff;"><strong>Etkinlik Sayfası</strong></h1>
                     <div class="row">
                         <div class="col-md-2">
-                            <img src="<%= etkinlik.photoPath %>" class="img-fluid" alt="">
+                            <img src="<%= etkinlik.photoPath %>" class="img-fluid" alt="" style="color: #fff;">
                         </div>
                         <div class="col-md-3">
                             <div class="card-body">
                                 <h4 class="card-name">
-                                    <a style="text-decoration: none; color: black" href="/admin/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
+                                    <a style="text-decoration: none; color: #fff" href="/admin/etkinlik/<%= etkinlik.idetkinlikler %> "> <%= etkinlik.etkinlikAdi %> </a>
                                 </h4>
-                                <p class="card-text"><%= etkinlik.aciklama %> </p>
-                                <p class="card-text"><strong>Kategori: </strong> <% kategoriler.forEach(kat => { %>
+                                <p class="card-text" style="color: #fff;"><%= etkinlik.aciklama %> </p>
+                                <p class="card-text" style="color: #fff;"><strong>Kategori: </strong> <% kategoriler.forEach(kat => { %>
                                     <% if (kat.idilgiAlanlari == etkinlik.kategori) { %>
                                         <%= kat.ilgiAlani %>
                                     <% } %>
@@ -207,12 +217,12 @@
                             </div>
                         </div>
                         <div class="col-md-2 d-flex flex-column justify-content-center align-items-center text-center">
-                            <p><strong>Tarih: </strong><%= etkinlik.tarih.getDate() %>-<%= (etkinlik.tarih.getMonth() + 1) %>-<%= etkinlik.tarih.getFullYear() %></p>
-                            <p><strong>Saat: </strong><%= etkinlik.saat %></p>
-                            <p><strong>Süre: </strong><%= etkinlik.etkinlikSuresi %> Dakika</p>
+                            <p style="color: #fff;"><strong>Tarih: </strong><%= etkinlik.tarih.getDate() %>-<%= (etkinlik.tarih.getMonth() + 1) %>-<%= etkinlik.tarih.getFullYear() %></p>
+                            <p style="color: #fff;"><strong>Saat: </strong><%= etkinlik.saat %></p>
+                            <p style="color: #fff;"><strong>Süre: </strong><%= etkinlik.etkinlikSuresi %> Dakika</p>
                         </div>
                         <div class="col-md-3 d-flex flex-column align-items-center justify-content-center">
-                            <h5>Etkinlik Kurucusu: </h5>
+                            <h5 style="color: #fff;"><strong>Etkinlik Kurucusu:</strong></h5>
                             <% if (typeof kurucu !== 'undefined') { %>
                                 <div class="card w-100 h-100 mb-3">
                                     <div class="d-flex align-items-center p-3">
@@ -224,7 +234,7 @@
                                     </div>
                                 </div>
                             <% } else { %>
-                                <p>Admin tarafından oluşturuldu veya etkinlik kurucusu bulunamadı.</p>
+                                <p style="color: #fff;">Admin tarafından oluşturuldu veya etkinlik kurucusu bulunamadı.</p>
                             <% } %>
 
                             
@@ -268,14 +278,14 @@
 
     <div class="katilimcilar">
         <div id="katilimciShow"></div>
-        <h2>KATILIMCILAR</h2>
+        <h2 style="color: #fff;"><strong>KATILIMCILAR</strong></h2>
         <% if (katilimci.length == 0) { %>
-            <p>Katılımcı bulunmamaktadır.</p>
+            <p style="color: #fff;">Katılımcı bulunmamaktadır.</p>
         <% } else { %>
             <% katilimci.forEach(kati => { %>
                 <div class="kutu">
-                    <span><%= kati.KullanıcıAdı %></span>
-                    <a class="kaldir" style="text-decoration: none; color: inherit;" href="/admin/katilimci/delete/<%= kati.idkatilimcilar %>">X</a>
+                    <a style="color: #fff; text-decoration: none; margin-right: 20px;" href="/admin/user_profile/<%= kati.idkullaniciR %>"><%= kati.KullanıcıAdı %></a>
+                    <a class="kaldir" style="text-decoration: none; color: #fff;" href="/admin/katilimci/delete/<%= kati.idkullaniciR %>">X</a>
                   </div>
             <% }) %>
         <% } %>
@@ -296,8 +306,8 @@
           <!-- Panel Chat -->
           <div class="panel" id="chat">
             <div class="panel-heading">
-              <h3 class="panel-title">
-                <i class="icon wb-chat-text" aria-hidden="true"></i> Chat
+              <h3 class="panel-title" style="color: #fff;">
+                <i class="icon wb-chat-text" aria-hidden="true" style="color: #fff;"></i> Chat
               </h3>
             </div>
             <div class="panel-body">
@@ -379,10 +389,35 @@
             </div>
         <% } %>
         </div>
+
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <h3 style="color: #fff;">Google Maps Rota Planlama</h3>
+                <button type="button" style="margin-top: 15px;" onclick="butForCar()" class="btn btn-primary mb-2">Araç İçin Rota</button>
+            <button type="button" style="margin-top: 15px;" onclick="butForCycling()" class="btn btn-primary mb-2">Bisiklet İçin Rota</button>
+            <button type="button" style="margin-top: 15px;" onclick="butForWalk()" class="btn btn-primary mb-2">Yürüyüş İçin Rota</button>
+    
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 mt-3">
+                <h3 style="color: #fff;">Rota Planlama</h3>
+                <button type="button" style="margin-top: 15px;" onclick="butForCar2()" class="btn btn-primary mb-2">Rota Hesapla</button>
+                <div id="map_rota" style="height: 400px; margin-top: 20px; margin-bottom: 50px;"></div>
+                <input type="hidden" id="enlem_etkinlik_rota" name="enlem_etkinlik_rota" value="<%= etkinlik.konum.x %>">
+                <input type="hidden" id="boylam_etkinlik_rota" name="boylam_etkinlik_rota" value="<%= etkinlik.konum.y %>">
+            </div>
+        </div>
+        <!-- boş div sonra doldurulacak-->
+        <div id="rota-hata"></div>
     </div>
+    
+        
+    
     
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
     <script>
         
     function previewEventPhoto(event) {
@@ -479,6 +514,121 @@
     
         // Mesaj gönderildikten sonra otomatik çalışması için
         window.onload = scrollToBottom;
+    </script>
+
+<script>
+    const etkinlikEnlem2 = parseFloat("<%= etkinlik.konum?.x || 39.9334 %>");
+    const etkinlikBoylam2 = parseFloat("<%= etkinlik.konum?.y || 32.8597 %>");
+    const map2 = L.map('map_rota').setView([etkinlikEnlem2, etkinlikBoylam2], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        maxZoom: 18,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map2);
+
+    const etkinlikMarker = L.marker([etkinlikEnlem2, etkinlikBoylam2], {
+        icon: L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+        }),
+        draggable: false,
+        title: "Etkinlik Konumu"
+    }).addTo(map2);
+
+    let clickMarker = null;
+
+    map2.on('click', function(e) {
+        const { lat, lng } = e.latlng;
+        if (clickMarker) {
+            clickMarker.setLatLng(e.latlng);
+        } else {
+        clickMarker = L.marker(e.latlng, {
+                icon: L.icon({
+                    iconUrl: '/static/images/location.png', // Kullanıcı tıklama ikonu URL'si
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                }),
+                draggable: true, 
+                title: "Seçilen Konum"
+            }).addTo(map2);
+            }
+
+            document.getElementById('enlem_etkinlik_rota').value = lat;
+            document.getElementById('boylam_etkinlik_rota').value = lng;
+        });
+
+
+    </script>
+
+    <script>
+    async function butForCar() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+        window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e0?hl=tr`, '_blank');
+    }
+
+    async function butForCycling() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+        window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e1?hl=tr`, '_blank');
+    }
+
+    async function butForWalk() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+        window.open(`https://www.google.com/maps/dir/${etkinlikEnlem2},${etkinlikBoylam2}/${enlem},${boylam}/data=!4m2!4m1!3e2?hl=tr`, '_blank');
+    }
+
+    async function butForCar2() {
+    // Fetch input values and parse them to floats
+    const enlem = parseFloat(document.getElementById('enlem').value);
+    const boylam = parseFloat(document.getElementById('boylam').value);
+    const enlem2 = parseFloat(document.getElementById('enlem_etkinlik_rota').value);
+    const boylam2 = parseFloat(document.getElementById('boylam_etkinlik_rota').value);
+
+    // Validate inputs
+    if (isNaN(enlem) || isNaN(boylam) || isNaN(enlem2) || isNaN(boylam2)) {
+        console.error("Invalid latitude or longitude values");
+        return;
+    }
+
+    console.log("yo");
+
+    // Ensure map2 is defined and add the routing control
+
+    if (typeof map2 !== "undefined") {
+        L.Routing.control({
+            waypoints: [
+                L.latLng(enlem, boylam),
+                L.latLng(enlem2, boylam2)
+            ],
+            routeWhileDragging: true,
+            reverseWaypoints: true,
+            showAlternatives: true,
+            router: new L.Routing.OSRMv1({
+                serviceUrl: 'https://router.project-osrm.org/route/v1'
+    })
+        }).addTo(map2);
+        //console.log("of");
+    } else {
+        console.error("map2 is not initialized");
+        //div'i doldur
+        document.getElementById('rota-hata').innerHTML = '<div class="alert alert-danger" role="alert">Harita yüklenemedi. Lütfen sayfayı yenileyin.</div>';
+    }
+
+    }
+    /*
+    async function butForCycling2() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+    }
+
+    async function butForWalk2() {
+        const enlem = document.getElementById('enlem_etkinlik_rota').value;
+        const boylam = document.getElementById('boylam_etkinlik_rota').value;
+    }
+    */
     </script>
 </body>
 </html>

@@ -2,15 +2,47 @@
 <html lang="en">
 <head>
     <%- include('../partials/head') %>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #2A2B33;
+        }
+    </style>
 </head>
 <body>
     <%- include('../partials/admin/nav') %>
-    <div class="container">
+    <div class="container mt-3">
         <div class="row">
-            <div class="col-md-12 mt-3">
-                <h3>Anasayfa</h3>
+            <div class="col-md-12">
+                <h3 style="color: #fff;">Tüm Etkinlikler</h3>
+                <div id="map_etkinlikler" style="height: 400px; margin-top: 20px; margin-bottom: 50px;"></div>
             </div>
         </div>
     </div>
+
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map_etkinlikler').setView([39.9334, 32.8597], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+        }).addTo(map);
+
+
+
+        const etkinlikler = <%- JSON.stringify(tum_etkinlikler) %>;
+        console.log(etkinlikler);
+
+        etkinlikler.forEach(etkinlik => {
+            console.log(etkinlik);
+            L.marker([etkinlik.konum.x, etkinlik.konum.y]).addTo(map)
+                .bindPopup(`<a href="/admin/etkinlik/${etkinlik.id}" style="text-decoration: none; font-size: 15px;">${etkinlik.isim}</a><br><strong>Tarih:</strong> ${etkinlik.tarih}<br><strong>Saat:</strong> ${etkinlik.saat}`)
+        });
+
+    </script>
 </body>
 </html>

@@ -5,6 +5,13 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
         #map { height: 400px; margin-bottom: 20px; }
+        body {
+            /* display: flex; */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #2A2B33;
+        }
     </style>
 </head>
 <body>
@@ -12,7 +19,7 @@
     <div class="container mt-3">
         <div class="row">
             <div class="col-md-12 mt-3">
-                <h3>Etkinlik Düzenle</h3>
+                <h3 style="color: #fff;"><strong>Etkinlik Düzenle</strong></h3>
             </div>
             <div class="col-md-12 mt-3">
                 <form method="post" enctype="multipart/form-data">
@@ -24,34 +31,34 @@
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="KullanıcıAdı" class="col-sm-2 col-from-label">Etkinlik Adı</label>
+                        <label for="KullanıcıAdı" class="col-sm-2 col-from-label" style="color: #ccc;">Etkinlik Adı</label>
                         <div class="col-sm-8">
                             <input type="text" class="form-control" id="etkinlikAdi" name="etkinlikAdi" value="<%= etkinlikAdi %>">
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="tarih" class="col-sm-2 col-from-label">Etkinlik Tarihi:</label>
+                        <label for="tarih" class="col-sm-2 col-from-label" style="color: #ccc;">Etkinlik Tarihi:</label>
                         <div class="col-sm-8">
                             <input type="date" id="tarih" name="tarih" value="<%= tarih %>" required>
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="saat" class="col-sm-2 col-from-label">Etkinlik Saati:</label>
+                        <label for="saat" class="col-sm-2 col-from-label" style="color: #ccc;">Etkinlik Saati:</label>
                         <div class="col-sm-8">
                             <input type="time" class="form-control" id="saat" name="saat" value="<%= saat %>" required>
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="etkinlikSuresi" class="col-sm-2 col-from-label">Etkinlik Süresi (dakika):</label>
+                        <label for="etkinlikSuresi" class="col-sm-2 col-from-label" style="color: #ccc;">Etkinlik Süresi (dakika):</label>
                         <div class="col-sm-8">
                             <input type="number" class="form-control" id="etkinlikSuresi" name="etkinlikSuresi" value="<%= sure %>" required>
                         </div>
                     </div>      
                     <div class="row mb-3">
-                        <label for="kategori" class="col-sm-2 col-from-label">Kategori:</label>
+                        <label for="kategori" class="col-sm-2 col-from-label" style="color: #ccc;">Kategori:</label>
                         <div class="col-sm-8">
                             <select id="kategori" name="kategori" required>
-                                <option value="-1" selected>Kategori Seçiniz</option>
+                                <option value="-1" style="color: #ccc;" selected>Kategori Seçiniz</option>
                                 <% kategoriler.forEach(kategori => { %>
                                     <% if (kategori.idilgiAlanlari == kategorisefa) { %>
                                         <option value="<%= kategori.idilgiAlanlari %>" selected><%= kategori.ilgiAlani %></option>
@@ -65,13 +72,13 @@
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label for="aciklama" class="col-sm-2 col-from-label">Açıklama:</label>
+                        <label for="aciklama" class="col-sm-2 col-from-label" style="color: #ccc;">Açıklama:</label>
                         <div class="col-sm-8">
                             <textarea class="form-control" id="aciklama" name="aciklama" required> <%= aciklama %> </textarea>
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <label class="col-sm-2 col-from-label">Konum:</label>
+                        <label class="col-sm-2 col-from-label" style="color: #ccc;">Konum:</label>
                         <div class="col-sm-8">
                             <div id="map"></div>
                             <input type="hidden" id="enlem" name="enlem" value="<%= konum.x %>">

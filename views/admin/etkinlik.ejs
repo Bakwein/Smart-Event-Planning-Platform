@@ -8,7 +8,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(to right, #f0f0f0, #b5fcd8);
+            background: #2A2B33;
         }
     </style>
 </head>
@@ -19,7 +19,7 @@
         <div class="container mt-3">
             <div class="row">
                 <div class="col-md-12">
-                    <h1 class="h3 mb-3">Onay Bekleyen Etkinlikler</h1>
+                    <h1 class="h3 mb-3" style="color: #fff"><strong></strong>Onay Bekleyen Etkinlikler</strong></h1>
                     <% if (onayGereken.length > 0) { %>
                         <% onayGereken.forEach(etk => { %>                    
                             <div class="card mb-3">
@@ -75,7 +75,7 @@
         <div class="container mt-3">
             <div class="row">
                 <div class="col-md-12">
-                    <h1 class="h3 mb-3">Onaylı Etkinlikler</h1>
+                    <h1 class="h3 mb-3" style="color: #fff;"><strong>Onaylı Etkinlikler</strong></h1>
                     <% if (etkinlikler.length > 0) { %>
                         <% etkinlikler.forEach(etk => { %>                    
                             <div class="card mb-3">
