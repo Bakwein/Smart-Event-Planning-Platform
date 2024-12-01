@@ -181,6 +181,7 @@
             text-decoration: none;
             line-height: normal;
             margin-top: 8px;
+            margin-right: 5px;
             text-align: center;
             font-size: 12px;
         }
@@ -228,7 +229,7 @@
                                     <div class="d-flex align-items-center p-3">
                                         <img src="<%= kurucu.photoPath %>" alt="pp" class="img-fluid" style="max-width: 50px; height: 50px; margin-right: 10px;">
                                         <div class="d-flex flex-column">
-                                            <p class="mb-0"><strong><%= kurucu.KullanıcıAdı %></strong></p>
+                                            <a href="/user/profile/<%= kurucu.idkullanıcılar %>" style="text-decoration: none; color: #000;"><strong><%= kurucu.KullanıcıAdı %></strong></a>
                                             <p class="mb-0"><%= kurucu.email %></p>
                                         </div>
                                     </div>
@@ -243,7 +244,7 @@
                         </div>
                         <div class="col-md-2 d-flex flex-column align-items-center justify-content-center">
                             <% if (typeof kurucu !== 'undefined' && kurucu.idkullanıcılar == kullanici_id) { %>
-                                <a class="btn btn-primary mb-2" href="/user/etkinlik/update/<%= etkinlik.idetkinlikler %>">Düzenle</a>
+                                <a class="btn btn-primary mb-2" href="/user/etkinlik/update2/<%= etkinlik.idetkinlikler %>">Düzenle</a>
                                 <a class="btn btn-danger mb-2" href="/user/etkinlik/delete/<%= etkinlik.idetkinlikler %>">Sil</a>
                             <% } %>
                             <% const katilimciVarMi = katilimci.find(k => k.idkullaniciR === kullanici_id); %>
@@ -287,7 +288,7 @@
             <% } else { %>
                 <% katilimci.forEach(kati => { %>
                     <div class="kutu">
-                        <a style="color: #fff; text-decoration: none;" href="/user/profile/<%= kati.idkullaniciR %>"><%= kati.KullanıcıAdı %></a>
+                        <a style="color: #fff; text-decoration: none; margin-right: 20px;" href="/user/profile/<%= kati.idkullaniciR %>"><%= kati.KullanıcıAdı %></a>
                         <% if (etkinlik.olusturanidkullaniciR == kullanici_id) { %>
                             <a class="kaldir" style="text-decoration: none; color: inherit;" href="/user/katilimci/delete/<%= kati.idkullaniciR %>">X</a>
                         <% } %>

@@ -719,7 +719,7 @@ router.post('/interests/interest/add', async function(req, res){
             ilgiler: ilgiler2,
             iliskiler: iliskiler2,
             message: 'Bilgiler Güncellendi',
-            alert_type: 'alert-danger'
+            alert_type: 'alert-success'
         });
     }
     catch(err)
@@ -769,7 +769,7 @@ router.post('/interests/connection/add', async function(req, res){
             ilgiler: ilgiler2,
             iliskiler: iliskiler2,
             message: 'Bilgiler Güncellendi',
-            alert_type: 'alert-danger'
+            alert_type: 'alert-success'
         });
     }
     catch(err)

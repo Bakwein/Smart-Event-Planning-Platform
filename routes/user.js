@@ -1891,6 +1891,132 @@ router.get("/etkinlik/join2/:id", async function(req, res){
     }
 });
 
+router.get("/etkinlik/join3/:id", async function(req, res){
+    cookie_control(req, res);
+    try{
+        const id = req.params.id;
+
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const kullanici_id = decoded.id;
+
+        const [olusturduklarim_onaysiz,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [kullanici_id, 0]);
+        const [olusturduklarim_onayli,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [kullanici_id, 1]);
+
+        const [katiliyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?)", [kullanici_id]);
+
+        const [katilmiyorum,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?)", [kullanici_id]);
+
+        const [kategori,] = await db.execute("SELECT * FROM ilgialanlari");
+
+
+        const [etkinlik,] = await db.execute("select * from etkinlikler where idetkinlikler = ?", [id]);
+
+        if(etkinlik.length === 0)
+        {
+            return res.render("user/etkinlikler", {
+                title: "Etkinliklerim",
+                kategori: kategori,
+                olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+                olusturduklarim_onayli: olusturduklarim_onayli,
+                katiliyorum: katiliyorum,
+                katilmiyorum: katilmiyorum,
+                message: '',
+                alert_type: '',
+                message2: '',
+                alert_type2: '',
+                message3: '',
+                alert_type3: '',
+                message4: 'Etkinlik Bulunamadı!',
+                alert_type4: 'alert-danger',
+    
+            });
+        }
+
+        const [katilimci_kontrol,] = await db.execute("select * from katilimcilar where idkullaniciR = ? AND idetkinlikR = ?", [kullanici_id, id]);
+        if(katilimci_kontrol > 0)
+        {
+            return res.render("user/etkinlikler", {
+                title: "Etkinliklerim",
+                kategori: kategori,
+                olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+                olusturduklarim_onayli: olusturduklarim_onayli,
+                katiliyorum: katiliyorum,
+                katilmiyorum: katilmiyorum,
+                message: '',
+                alert_type: '',
+                message2: '',
+                alert_type2: '',
+                message3: '',
+                alert_type3: '',
+                message4: 'Bu katılımcı etkinliğe katılmış!',
+                alert_type4: 'alert-danger',
+    
+            });
+        }
+
+        //etlinklik baslangic bitis
+        const baslangic = moment(`${moment(etkinlik[0].tarih).format('YYYY-MM-DD')} ${etkinlik[0].saat}`, 'YYYY-MM-DD HH:mm');
+        const bitis = moment(`${moment(etkinlik[0].tarih).format('YYYY-MM-DD')} ${etkinlik[0].saat}`, 'YYYY-MM-DD HH:mm').add(etkinlik[0].etkinlikSuresi, 'minutes');
+
+        //cakisma var mi
+        const [bu_haric_katildigim_tum_etkinlikler,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [kullanici_id, 1]);
+        for(let i = 0; i < bu_haric_katildigim_tum_etkinlikler.length; i++)
+        {
+            const baslangic2 = moment(`${moment(bu_haric_katildigim_tum_etkinlikler[i].tarih).format("YYYY-MM-DD")} ${bu_haric_katildigim_tum_etkinlikler[i].saat}`, 'YYYY-MM-DD HH:mm');
+            const bitis2 = moment(`${moment(bu_haric_katildigim_tum_etkinlikler[i].tarih).format("YYYY-MM-DD")} ${bu_haric_katildigim_tum_etkinlikler[i].saat}`, 'YYYY-MM-DD HH:mm').add(bu_haric_katildigim_tum_etkinlikler[i].etkinlikSuresi, 'minutes');
+
+            if(baslangic.isBetween(baslangic2, bitis2) || bitis.isBetween(baslangic2, bitis2))
+            {
+                return res.render("user/etkinlikler", {
+                    title: "Etkinliklerim",
+                    kategori: kategori,
+                    olusturduklarim_onaysiz: olusturduklarim_onaysiz,
+                    olusturduklarim_onayli: olusturduklarim_onayli,
+                    katiliyorum: katiliyorum,
+                    katilmiyorum: katilmiyorum,
+                    message: '',
+                    alert_type: '',
+                    message2: '',
+                    alert_type2: '',
+                    message3: '',
+                    alert_type3: '',
+                    message4: 'Etkinlik başka bir etkinlikle çakışıyor! <a href="/user/etkinlik-onerisi" style="display:block; text-align:center; margin-top:5px">Buraya tıklayarak size uygun etkinlik seçebilirsiniz</a>',
+                    alert_type4: 'alert-danger',
+        
+                });
+            }
+        }
+
+
+        await db.execute("INSERT INTO katilimcilar(idkullaniciR, idetkinlikR) VALUES (?, ?)", [kullanici_id, id]);
+
+        //puan 
+        /*
+        await db.execute(`INSERT INTO puan (idkullaniciR, katilimPuani, olusturmaPuani, bonusPuan) VALUES (?, ?, ?, ?)`, [users_varmi[0].idkullanıcılar, 0, 0, 0]);
+        */
+
+        //puan var mi
+        const [puan_varmi,] = await db.execute("select * from puan where idkullaniciR = ?", [kullanici_id]);
+        if(puan_varmi.length === 0)
+        {
+            await db.execute(`INSERT INTO puan (idkullaniciR, katilimPuani, olusturmaPuani, bonusPuan) VALUES (?, ?, ?, ?)`, [kullanici_id, 0, 0, 20]);
+        }
+
+        //etkinliğe katildi
+        await db.execute("UPDATE puan SET katilimPuani = katilimPuani + 10 WHERE idkullaniciR = ?", [kullanici_id]);
+
+
+        res.redirect(`/user/etkinlik-onerisi`);
+
+        
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
+});
+
 router.get('/profile/:profileid', async function(req, res)
 {
     try{
@@ -2569,6 +2695,7 @@ router.post("/update_render/:id", upload.single('etkinlikFoto'), async function(
         const {etkinlikFoto, etkinlikAdi, tarih, saat, etkinlikSuresi, kategori, aciklama, enlem, boylam} = req.body;
         const etkinlikFotoPath = req.file ? "/static" + req.file.path.split('public')[1] : "/static/images/event.png";
 
+
         const [kategoriler, ] = await db.execute("select * from ilgialanlari");
 
         const [etkinlik,] = await db.execute("select * from etkinlikler where idetkinlikler = ?", [id]);
@@ -2638,31 +2765,8 @@ router.post("/update_render/:id", upload.single('etkinlikFoto'), async function(
 
         await db.execute("UPDATE etkinlikler SET etkinlikAdi = ?, aciklama = ?, tarih = ?, saat = ?, etkinlikSuresi = ?, konum = POINT(?, ?), kategori = ?, photoPath = ? WHERE idetkinlikler = ?", [etkinlikAdi, aciklama, tarih, saat, etkinlikSuresi, enlem, boylam, kategori, etkinlikFotoPath, id]);
 
-        const [olusturduklarim_onaysiz2,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [id, 0]);
-        const [olusturduklarim_onayli2,] = await db.execute("SELECT * FROM etkinlikler WHERE olusturanidkullaniciR = ? AND durum = ?", [id, 1]);
+        res.redirect("/user/etkinlikler");
 
-        const [katiliyorum2,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
-
-        const [katilmiyorum2,] = await db.execute("SELECT * FROM etkinlikler WHERE idetkinlikler NOT IN (SELECT idetkinlikR FROM katilimcilar WHERE idkullaniciR = ?) AND durum = ?", [id, 1]);
-
-        const [kategoriler2,] = await db.execute("SELECT * FROM ilgialanlari");
-
-        res.render("user/etkinlikler", {
-            title: "Etkinliklerim",
-            kategori: kategoriler2,
-            olusturduklarim_onaysiz: olusturduklarim_onaysiz2,
-            olusturduklarim_onayli: olusturduklarim_onayli2,
-            katiliyorum: katiliyorum2,
-            katilmiyorum: katilmiyorum2,
-            message: '',
-            alert_type: '',
-            message2: '',
-            alert_type2: '',
-            message3: '',
-            alert_type3: '',
-            message4: '',
-            alert_type4: '',
-        });
     }
     catch(err)
     {

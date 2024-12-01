@@ -173,6 +173,28 @@ app.post("/upload_photo2", upload.single('photo'), async function(req, res){
     }
 });
 
+app.post("/upload_photo3", upload.single('photo'), async function(req, res){
+    try{
+        //path id kontrol
+        if(!req.file || !req.body.id){
+            res.redirect("/");
+            return;
+        }
+        let photoPath = req.file.path;
+        photoPath = "/static" + photoPath.split('public')[1];
+        const id = req.body.id;
+
+        //db update
+        await db.execute("UPDATE kullanıcılar SET photoPath = ? WHERE idkullanıcılar = ?", [photoPath, id]);
+
+        res.redirect("/admin/user_update/"+id);
+
+    }
+    catch(err){
+        console.log(err);
+    }
+});
+
 app.post("/notifications/read", async (req, res) => {
     const token = req.cookies.token;
     if(!token){
